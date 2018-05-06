@@ -18,15 +18,34 @@ Dúvidas em <span style="color:blue">**azul**</span> eu acho que já entendi, mas 
 <span style="color:green">**Resposta**</span>:
 * _u.m.c. milhão_ (é a unidade que o Bacen usa para algumas variáveis)
 * _variação % mensal_ (tipo quando pega o PIB e calcula o de hoje menos o de ontem dividido pelo de ontem)
-* _IPCA_ - **price index** ?
+* _IPCA_ - **price index** ou **inflation rate** ?
 * _BM\&FBOVESPA S.A. - Bolsa de Valores, Mercadorias e Futuros (BM\&FBOVESPA)_
-* 
+* Capital income 
+* Labor income
+* Capital-Labor ratio
+* Interest rate (o que fazer com SELIC, deixo SELIC mesmo?)
+* 3 month treasury bill rate
+* Price index ou Inflation rate?
+* Real Effective Interest Rate Index (Índice da Taxa de Câmbio Efetiva Real)
+* Precisa traduzir as fontes dos dados? Por exemplo, Banco Central departamento de estatísticas ou a Bovespa?
 
-2.  <span style="color:red">**Dúvida 2:**</span> Queria discutir sobre raizes unitárias...
+2.  <span style="color:blue">**Dúvida 2:**</span> Queria discutir sobre raizes unitárias...
 * Como o modelo é TVP, por construção ele não "acredita" em uma distribuição estacionária?
 
-<span style="color:green">**Resposta**</span>: 
+<span style="color:green">**Resposta**</span>: Isso também. Mas o fato de usar um passeio aleatório como lei de movimento dos coeficientes naturalmente impõe uma estrutura não estacionária no modelo.
 
+2. 1. <span style="color:red">**Dúvida 2:**</span> Tá, mas aí como que a gente faz com a função impulso resposta? Pelo que eu entendo, a função impulso resposta usa os coeficientes calculados (no caso, estou usando a média) em um determinado $t$ para dar o choque em uma variável e ver o que ocorre com as demais, mas ele não muda os coeficientes... Como que fica isso? Eu fui procurar na documentação do pacote que estou usando como que é calculada a FIR. Tem três formas de fazer (eu estou usando a terceira, que é a mesma maneira do Primiceri e Del Negro (2015)). O modelo do Primideri para uma série temporal n-dimensional é dado por:
+
+$$y_t = c_t + B_{1,t}\cdot y_{t-1} + \ldots + B_{p,t} \cdot y_{t-p} + A_t^{-1} \cdot \Sigma_t\cdot \varepsilon_t$$
+(a especificação completa pode ser vista [aqui](https://github.com/FK83/bvarsv/blob/master/bvarsv_Nov2015_website.pdf)).
+
+a. No primeiro cenário, a FIR é calculada considerando o vetor $u_t \equiv A_t^{-1} \cdot \Sigma_t\cdot \varepsilon_t$. A função estima qual o efeito de um choque de um desvio padrão em um dos elementos $u_t$ (i.e. $u_{t.j}=1$ e $u_{t,i}=0$, para todo $i \neq j$) afeta $y_{t+h}$, em comparação com $u_t$ sendo um vetor de zeros. Esta abordagem não é considerada realista pois usualmente $A_t^{-1} \cdot \Sigma_t$ não será uma matriz diagonal (os choques são correlacionados). Nesta abordagem, tanto os elementos de $c_t$ como de $B_{j,t}$ são mantidos fixos nos seus valores estimados para $t$;
+b. No segundo cenário, a FIR estima o impacto de uma unidade em algum dos elementos de $\varepsilon_t$. Os elementos de $c_t$, $B_{j,t}$, $A_t$ e $\Sigma_t$ são mantidos fixos nos seus valores estimados para $t$. Esta abordagem depende da ordem das variáveis.
+c. O cenário 3 é igual ao cenário dois mas os elementos de $\Sigma_t$ são substituídos pela média dos valores em todos os períodos. Esta forma é a que foi utilizada por Primiceri em 2005 e Primiceri e Del Negro em 2015.
+
+Na prática o que o algoritmo faz é calcular a FIR para cada uma das estimativas obtidas pelo algoritmo MCMC e então calcula a média e os quantis desses valores.
+
+<span style="color:green">**Resposta**</span>: 
 
 3.  <span style="color:red">**Dúvida 3:**</span> Sobre o X-13 ARIMA SEATS. Tem uma opção de usar uma transformação nos dados antes de ajustar o modelo SARIMA. O que o procedimento faz é uma transformação Box-Cox. Mas daí a minha dúvida é o seguinte: em geral o modelo testa se deve fazer o log versus fazer nada (o default é esse). Só que a série sem sazonalidade, quando plotada contra a série original está sempre na mesma escala (e no caso do PIB, que tem tendência, o bicho continua com tendência). Essa transformação de log é o quê, então?
 
@@ -49,7 +68,11 @@ Por outro lado, se a taxa de câmbio aumenta, os investimentos em moeda estrangei
 
 <span style="color:green">**Resposta**</span>: 
 
-5.  <span style="color:red">**Dúvida 5:**</span>
+5.  <span style="color:red">**Dúvida 5:** </span> Eu estou com problema para interpretar o coeficiente do PIB defasado na equação dele, pois está negativo. Isso quer dizer que quanto maior a taxa de variação em $t-1$, *menor* será a taxa de variação em $t$?
+
+<span style="color:green">**Resposta**</span>:
+
+6.  <span style="color:red">**Dúvida 6:** </span>
 
 <span style="color:green">**Resposta**</span>: 
 
@@ -61,15 +84,15 @@ To estimate the VAR model, I used the [`bvarsv`](https://cran.r-project.org/web/
 
 ## Downloading packages
 
-If mirror 10 ("UFRJ") is offline, try changing `ind = 10` to `ind = 1`. Do the same thing if you get an error installing `BETS` package.
+If mirror 10 ("UFRJ") is offline, try changing `ind = 10` to `ind = 1`. Do the same thing if you get an error installing the `BETS` package.
 
 ```{r, warning = FALSE, message = FALSE}
 chooseCRANmirror(graphics = FALSE, ind = 10)
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(devtools, ggplot2, forecast, BETS, seasonal, seasonalview, bvarsv, lubridate, zoo, stargazer, gridExtra, reshape2, ggfortify, RColorBrewer, scales, quantmod, PerformanceAnalytics, strucchange, coda, foreach, doParallel, knitr, grid, ggpubr, gdata, vars, urca) 
+pacman::p_load(devtools, ggplot2, forecast, BETS, seasonal, seasonalview, bvarsv, lubridate, zoo, stargazer, gridExtra, reshape2, ggfortify, RColorBrewer, scales, quantmod, PerformanceAnalytics, strucchange, coda, foreach, doParallel, knitr, grid, ggpubr, gdata, vars, urca, compiler) 
 ```
 
-These are some auxiliary functions used later on the code (I took them from `bvarsv` documentation):
+These are some auxiliary functions used later in the code (I took them from `bvarsv` documentation):
 
 ```{r, warning = FALSE, message = FALSE}
 ## Some graphical parameters
@@ -117,7 +140,7 @@ All data was obtained from Brazil's Central Bank repository (Sistema Gerenciador
     * **Series number in SGS:** 4390. 
     * **Source:** Brazil's Central Bank - Open Market Operations Department (BCB-Demab).
     
-* **Taxa referencial de swaps DI pré-fixada (BM\&F) - Prazo de 90 dias (fim de período)** (_3-month threasury bill rate_)
+* **Taxa referencial de swaps DI pré-fixada (BM\&F) - Prazo de 90 dias (fim de período)** (_3-month treasury bill rate_)
     * **Beginning of the series:** September, 1999. 
     * **End of the series:** March, 2018. 
     * **Unity:** % annual. 
@@ -157,492 +180,6 @@ Obs: Para ver o ADF, usei isso aqui: https://stats.stackexchange.com/questions/2
 
 ## Downloading the data
 
-This was the old block were I did the transformations prior to the seasonal adjustment. I'll let this here just in case but will build a new block where the data is adjusted for seasonality before the transformations.
-```{r, message = FALSE, warning = FALSE, eval = FALSE, echo = FALSE}
-# Auxiliary variables, so I don't need to bother when something changes
-inicio <- "1996-01-01"
-fim    <- "2018-02-28"
-inicio_deflator <- "1993-12-31"
-inicio_swap     <- "1999-09-01"
-
-# Don't mess with this code
-inicio_cambio <- paste(seq(as.Date(inicio), length = 2, by = "-1 month")[2]) # 1 month before the beginning of the other series
-inicio_ipca2   <- paste(seq(as.Date(inicio), length = 12, by = "-1 month")[12]) # 12 months before the beginning of the other series
-fim_ipca      <- paste(seq(as.Date(fim), length = 2, by = "1 month")[2]) # 1 month after the end of the other series
-inicio_swap2 <- paste(seq(as.Date(inicio_swap), length = 2, by = "-1 month")[2]) # 1 1 month before the beginning of the other series
-
-## Obs: In case you have a SQL problem, rollback this two packages and mannually download BETS from CRAN and reinstall it as well
-## See: https://stackoverflow.com/questions/43073782/rmysql-system-error-10060 and https://github.com/pedrocostaferreira/BETS/issues/29
-# require(devtools)
-# install_version("DBI", version = "0.5", repos = "http://cran.us.r-project.org")
-# install_version("RMySQL", version = "0.10.9", repos = "http://cran.us.r-project.org")
-
-################################
-##### Capital labor ratio ######
-################################
-
-trabalho <- BETS.get("7620", from = inicio, to = fim)
-capital  <- BETS.get("7621", from = inicio, to = fim)
-capital_trabalho <- capital/trabalho
-autoplot(capital_trabalho)
-ct.df <- ur.df(capital_trabalho, type = "drift", selectlags = "AIC", lags = 20)
-summary(ct.df)
-
-########################
-##### Price Index ######
-########################
-
-ipca_raw <- BETS.get("433", from = inicio_deflator, to = fim_ipca) 
-ipca2 <- ipca_raw
-ipca2[1] <- 100
-
-# The following calculation was made following IPEA methodology: http://www.ipeadata.gov.br/iframe_transformacao.aspx?width=1474&height=701
-# Transforms in index
-for (i in 2:length(ipca2)){
-  ipca2[i] <- round(ipca2[(i-1)]*(1+ipca2[(i)]/100),2)
-}
-
-# Geometric Average
-for (i in 1:(length(ipca2)-1)){
-  ipca2[i] <- sqrt(ipca2[i]*ipca2[(i+1)])
-}
-
-# Change base to nov/2017
-for (i in 1:length(ipca2)) {
-  ipca2[i] <- tail(ipca2, n=2)[1]/ipca2[i]
-}
-
-# Elimitates data outside the period we are studying
-ipca2 <- ts(ipca2,  start = c(1993, 12, 31), frequency = 12)
-ano_ipca <- as.numeric(substr(inicio_cambio, start = 1, stop = 4))
-mes_ipca <- as.numeric(substr(inicio_cambio, start = 6, stop = 7))
-ipca2 <- window(ipca2, c(ano_ipca, mes_ipca))
-
-ano_ipca <- as.numeric(substr(inicio_ipca2, start = 1, stop = 4))
-mes_ipca <- as.numeric(substr(inicio_ipca2, start = 6, stop = 7))
-ipca_raw <- window(ipca_raw, c(ano_ipca, mes_ipca))
-
-# Removes last observation
-ipca_raw <- ipca_raw[1:(length(ipca_raw)-1)]
-
-ipca_acum <- ipca_raw/100 + 1
-ipca <- vector()
-
-final <- length(ipca_acum)
-for (i in 12:final){
-  ipca[(i-11)] <- (prod(ipca_acum[(i-11):i])-1)*100
-}
-
-ano <- as.numeric(substr(inicio, start = 1, stop = 4))
-mes <- as.numeric(substr(inicio, start = 6, stop = 7))
-dia <- as.numeric(substr(inicio, start = 9, stop = 10))
-
-ipca <- ts(ipca,  start = c(ano, mes, dia), frequency = 12) # Date format YYYY MM DD
-#ndiffs(ipca,test="adf",alpha = 0.05)
-autoplot(ipca)
-ipca.df <- ur.df(ipca, type = "drift", selectlags = "AIC", lags = 20)
-summary(ipca.df)
-# Mesma coisa, eu rejeito a hipótese nula a 1%?
-
-
-################
-##### GDP ######
-################
-
-PIBmensal <- BETS.get("4380", from = inicio_cambio, to = fim)
-PIBmensal <- PIBmensal * ipca2 
-
-# We test whether the GDP is non-stationary (via augmented dickey fuller test)
-#ndiffs(PIBmensal,test="adf",alpha = 0.05)
-autoplot(PIBmensal)
-PIBm.df <- ur.df(PIBmensal, type = "trend", selectlags = "AIC", lags = 20)
-summary(PIBm.df)
-# Aqui eu não consigo rejeitar tau3 = 0 mas rejeito as outras duas?
-# Since it is non-stationary, we take log difference
-m <- seas(x = PIBmensal, regression.aictest = NULL)
-qs(m)
-summary(m)
-PIBteste <- final(m)
-autoplot(PIBteste)
-PIBm.df <- ur.df(PIBteste, type = "trend", selectlags = "AIC", lags = 20)
-summary(PIBm.df)
-
-PIB <- diff(log(PIBteste), 1)
-autoplot(PIB)
-PIB.df <- ur.df(PIB, type = "none", selectlags = "AIC", lags = 20)
-summary(PIB.df)
-# Rejeito a hipótese nula de raiz unitária?
-#ndiffs(PIB, test="adf", alpha = 0.05)
-
-##########################
-##### Exchange rate ######
-##########################
-
-cambio_raw <- BETS.get("3696", from = inicio_cambio, to = fim)
-# Same thing we did for GDP
-#ndiffs(cambio_raw,test="adf",alpha = 0.05)
-autoplot(cambio_raw)
-cr.df <- ur.df(cambio_raw, type = "trend", selectlags = "AIC", lags = 20)
-summary(cr.df)
-# Tô com dificuldade para interpretar quando o coeficiente é positivo... quando é MENOR eu rejeito a hipótese nula?
-cambio     <- diff(log(cambio_raw), 1)
-#ndiffs(cambio,test="adf",alpha = 0.05)
-autoplot(cambio)
-cambio.df <- ur.df(cambio, type = "none", selectlags = "AIC", lags = 20)
-summary(cambio.df)
-
-###########################
-##### Interest rates ######
-###########################
-
-selic_4390 <- BETS.get("4390", from = inicio, to = fim) 
-selic <- ((1+selic_4390/100)^(12)-1)*100
-#ndiffs(selic, test="adf", alpha = 0.05)
-autoplot(selic)
-selic.df <- ur.df(selic, type = "none", selectlags = "AIC", lags = 20)
-summary(selic.df)
-
-
-swap90 <- BETS.get("7818", from = inicio_swap, to = fim)
-#ndiffs(swap90, test="adf", alpha = 0.05)
-autoplot(swap90)
-swap.df <- ur.df(swap90, type = "trend", selectlags = "AIC", lags = 20)
-summary(swap.df)
-
-```
-
-## Visualizing data
-
-```{r, eval = FALSE, echo = FALSE}
-# Make dummy observations to complete the swap series - I need to plot the graph. Later I'll drop, treat seasonality and merge with selic
-dummy <- ts(rep(0, length(seq(from = as.Date(inicio), to = as.Date(inicio_swap2), by = "1 month"))),  start = c(1996, 01, 01), frequency = 12)
-## Binding the series
-comb <- ts.union(dummy, swap90)
-swap <- pmin(comb[,1], comb[,2], na.rm = TRUE)
-swap[1:44] <- NA
-
-# Plotting some nice graphs
-## First, creates a data frame
-df1 <- data.frame(seq(as.Date(inicio), length = length(ipca), by = "1 month"), capital_trabalho, swap, selic, PIB, cambio, ipca)
-names(df1) <- c("Data", "Capital_trabalho", "swap", "selic", "PIB", "Cambio",  "IPCA")
-df2 <- melt(data = df1, id.vars = "Data")
-
-## Plot everything together
-ggplot(df2, aes(Data, value, colour = variable)) +
-  geom_line(alpha = 1)+
-  labs(title="Variáveis do modelo", y = "", x= "Time", color = "Variável") +
-  scale_colour_brewer(palette = "Dark2") +
-  theme_bw()
-
-cores <- brewer.pal(6, "Dark2")
-
-## Individual Graphs
-### Capital-Labor Ratio
-p1 <- ggplot(df2[which(df2$variable == "Capital_trabalho"),], aes(Data, value, colour = variable)) +
-        geom_line(alpha = 1, show.legend=F, colour = cores[1])+
-        scale_y_continuous(name="Capital trabalho") +
-        scale_x_date(date_breaks = "12 months")+ 
-        theme_bw()
-p1 <- p1 + theme(axis.text.x=element_blank(), axis.title.x = element_blank(), axis.title.y = element_text(size = 6))
-
-### Swap (interest rate)
-p2 <- ggplot(df2[which(df2$variable == "swap"),], aes(Data, value, colour = variable)) +
-        geom_line(alpha = 1, show.legend=F, colour = cores[5])+
-        scale_y_continuous(name="Swap DI 90d (%a.a)") +
-        scale_x_date(date_breaks = "12 months")+
-        theme_bw()
-p2 <- p2 + theme(axis.text.x=element_blank(), axis.title.x = element_blank(), axis.title.y = element_text(size = 6))
-
-### GDP
-p3 <- ggplot(df2[which(df2$variable == "PIB"),], aes(Data, value, colour = variable)) +
-        geom_line(alpha = 1, show.legend=F, colour = cores[3])+
-        scale_y_continuous(name="PIB mensal (tx.cresc)") +
-        scale_x_date(date_breaks = "12 months", name = "Data", labels = date_format("%Y"))+
-        theme_bw()
-p3 <- p3 + theme(axis.text.x=element_blank(), axis.title.x = element_blank(), axis.title.y = element_text(size = 6))
-
-## Exchange rate
-p4 <- ggplot(df2[which(df2$variable == "Cambio"),], aes(Data, value, colour = variable)) +
-        geom_line(alpha = 1, show.legend=F, colour = cores[4])+
-        scale_y_continuous(name="Tx. Câmbio (var)") +
-        scale_x_date(date_breaks = "12 months")+
-        theme_bw()
-p4 <- p4 + theme(axis.text.x=element_blank(), axis.title.x = element_blank(), axis.title.y = element_text(size = 6))
-
-## Price Index (IPCA)
-p6 <- ggplot(df2[which(df2$variable == "IPCA"),], aes(Data, value, colour = variable)) +
-        geom_line(alpha = 1, show.legend=F, colour = cores[6])+
-        scale_y_continuous(name="IPCA") +
-        scale_x_date(date_breaks = "12 months", name = "Data", labels = date_format("%Y"))+
-        theme_bw()
-p6 <- p6 + theme(axis.text.x = element_text(angle=25, hjust = 1, size = 6), axis.title.x = element_blank(), axis.title.y = element_text(size = 6))
-
-grid.arrange(p1, p2, p4, p3, p6, ncol=1, nrow = 5)
-```
-
-## Treating for seasonality and structural breaks
-
-1. Capital-Labor Ratio
-```{r, warning = FALSE, message=FALSE, eval = FALSE, echo = FALSE}
-
-# Calculates the structural breaks
-bp_ts <- breakpoints(capital_trabalho ~ 1)
-ci_ts <- confint(bp_ts)
-
-# Monthplot aggregates days and months and takes averages
-ggmonthplot(capital_trabalho) + 
-  theme_bw() +
-  scale_y_continuous(name = "Capital-Labor Ratio (% - average)") +
-  #labs(title = "Média diária e mensal da razão capital-trabalho", x = "Mês", subtitle = "Nenhuma transformação")
-  labs(title = "Daily and monthly averages of Capital-Labor ratio", x = "Month", subtitle = "No data transformation")
-
-# Seasonplot has the averages for month, each line represents a year
-ggseasonplot(capital_trabalho, year.labels = TRUE) + 
-  geom_point() + 
-  theme_bw() + 
-  scale_y_continuous(name = "Capital-Labor Ratio (% - average)") +
-  labs(title = "Monthly averages of Capital-Labor ratio", x = "Months", subtitle = "No data transformation")
-
-Data <- seq(as.Date("1996-01-01"), length = length(capital_trabalho), by = "1 month")
-df1 <- melt(data.frame(Data,capital_trabalho), id.vars = "Data")
-names(df1) <- c("Data", "Variavel", "Valor")
-
-# Graph with structural break (dashed) and CI (red)
-p1 <- ggplot(df1[which(df1$Variavel == "capital_trabalho"),], aes(Data, Valor, colour = Variavel)) +
-        geom_line(alpha = 1, show.legend=F, colour = cores[1])+
-        scale_y_continuous(name="Capital-Labor ratio") +
-        scale_x_date(date_breaks = "12 months", name = "Date", labels = date_format("%m-%Y"))+ 
-        geom_vline(xintercept = Data[bp_ts$breakpoints], linetype="longdash")+
-        geom_segment(aes(x = Data[ci_ts$confint[1]], y = min(capital_trabalho), xend = Data[ci_ts$confint[3]], yend = min(capital_trabalho)))+
-        theme_bw()
-p1 <- p1 + theme(axis.text.x = element_text(angle=25, hjust = 1, size = 6), legend.position = "none")
-p1
-
-# We divide the series in pieces (accordingly to the structural break)
-capital_trabalho_a <- capital_trabalho[1:bp_ts$breakpoints]
-capital_trabalho_b <- capital_trabalho[(bp_ts$breakpoints+1):length(capital_trabalho)]
-capital_trabalho_a <- ts(capital_trabalho_a,  start = c(1996, 01, 01), frequency = 12)
-capital_trabalho_b <- ts(capital_trabalho_b,  start = c(2004, 02, 01), frequency = 12)
-
-m <- seas(x = capital_trabalho_a, transform.function = "none", regression.aictest = NULL)
-#m <- seas(x = capital_trabalho_a, regression.aictest = NULL)
-
-## First diagnostics is using qs() function to check for seasonality after the adjustment
-qs(m)
-# Click here to see the how the qs statistics is calculated: https://stats.stackexchange.com/questions/148573/the-results-and-specifics-from-the-qs-function-in-r
-# The first 7 results are related to the whole series, the last 7 comprehends only the last 8 years
-# qsori is the original series
-# qsorievadj is the original series corrected for extreme values
-# qsrsd is the residual's series of the ARIMA model
-# qssadj is the series with seasonal adjustment 
-# qssadjevadj is the series with seasonal adjustment corrected for extreme values
-# qsirr is the series of the irregular component
-# qsirrevadj is the series of the irregular component corrected for extreme values
-# by the output, we can conclude that there is no evidence of seasonal components in the adjusted series, the residuals and the irregular component, even when we look just the last 8 years.
-
-# Next step is to diagnose the pre-adjust and the ARIMA model
-summary(m)
-# We have an level-shift outlier in July, 1998 (Asian crisis?)
-# We also have additive outliers in Jan96, Jan98, Aug98, Feb99, Mar99, Oct02
-# The estimated model is an ARIMA (1 0 0)(0 1 1) with the non-seasonal AR significative and the MA seasonal significative.
-capital_trabalho_2a <- final(m)
-
-m <- seas(x = capital_trabalho_b, transform.function = "none", regression.aictest = NULL)
-
-#m <- seas(x = capital_trabalho_b, regression.aictest = NULL) # se tomar o log, fica melhor
-qs(m)
-summary(m)
-capital_trabalho_2b <- final(m)
-
-###############
-# Juntando novamente as duas séries
-###############
-
-comb <- ts.union(capital_trabalho_2a, capital_trabalho_2b)
-capital_trabalho_final <- pmin(comb[,1], comb[,2], na.rm = TRUE)
-
-# Compara a série ajustada com a série original
-df <- data.frame(seq(as.Date("1996-01-01"), length = length(capital_trabalho_final), by = "1 month"), capital_trabalho, capital_trabalho_final)
-names(df) <- c("Data", "Original", "Série Filtrada")
-p1 <- ggplot(df, aes(Data)) +
-  geom_line(aes(y = capital_trabalho, colour = "Original")) +
-  geom_line(aes(y = capital_trabalho_final, colour = "Filtrada")) + 
-  scale_x_date(date_breaks = "12 months", name = "Data", labels = date_format("%m-%Y"))+
-  scale_y_continuous(name = "Razão Capital/Trabalho")+
-  labs(color="Variável") +
-  theme_bw() + theme(axis.text.x = element_text(angle=30, hjust = 1, size = 7))
-p1
-
-teste <- ur.df(diff(capital_trabalho_final), type = "drift", lags = 20, selectlags = "AIC")
-summary(teste)
-rm(capital_trabalho_a, capital_trabalho_b, capital_trabalho_2a, capital_trabalho_2b, p1, capital, trabalho)
-```
-
-2. Selic (interest rate)
-
-```{r, message = FALSE, warning = FALSE, eval = FALSE, echo = FALSE}
-ggmonthplot(selic) + 
-  theme_bw() +
-  scale_y_continuous(name = "Selic (%a.a - média)") +
-  labs(title = "Média diária e mensal da taxa Selic", x = "Mês", subtitle = "Nenhuma transformação")
-
-# Gráfico por ano e mês
-ggseasonplot(selic, year.labels = TRUE) + 
-  geom_point() + 
-  theme_bw() + 
-  scale_y_continuous(name = "Selic (%a.a. - média)") +
-  labs(title = "Média mensal da taxa Selic", x = "Mês", subtitle = "Nenhuma transformação")
-
-bp_ts <- breakpoints(selic ~ 1)
-ci_ts <- confint(bp_ts)
-
-Data <- seq(as.Date("1996-01-01"), length = length(selic), by = "1 month")
-df1 <- melt(data.frame(Data,selic), id.vars = "Data")
-names(df1) <- c("Data", "Variavel", "Valor")
-
-p1 <- ggplot(df1[which(df1$Variavel == "selic"),], aes(Data, Valor, colour = Variavel)) +
-        geom_line(alpha = 1, show.legend=F, colour = cores[1])+
-        scale_y_continuous(name="Selic (%a.a.)") +
-        scale_x_date(date_breaks = "12 months", name = "Data", labels = date_format("%m-%Y"))+ 
-        geom_vline(xintercept = Data[bp_ts$breakpoints], linetype="longdash")+
-        geom_segment(aes(x = Data[ci_ts$confint[1]], y = min(selic), xend = Data[ci_ts$confint[5]], yend = min(selic)))+
-        geom_segment(aes(x = Data[ci_ts$confint[2]], y = min(selic), xend = Data[ci_ts$confint[6]], yend = min(selic)))+
-        theme_bw()
-p1 <- p1 + theme(axis.text.x = element_text(angle=25, hjust = 1, size = 6), legend.position = "none")
-p1
-
-###########
-# Dividindo a selic em três pedaços
-##########
-
-# Salvando três séries para passar o seasonal
-selic_a <- selic[1:(bp_ts$breakpoints[1]-1)]
-selic_b <- selic[(bp_ts$breakpoints[1]):(bp_ts$breakpoints[2]-1)]
-selic_c <- selic[(bp_ts$breakpoints[2]):(length(selic))]
-selic_a <- ts(selic_a,  start = c(1996, 01, 01), frequency = 12)
-selic_b <- ts(selic_b,  start = c(1999, 05, 01), frequency = 12)
-selic_c <- ts(selic_c,  start = c(2006, 08, 01), frequency = 12)
-
-selic_2a <- selic_a
-
-m <- seas(x = selic_b, transform.function = "none", regression.aictest = NULL)
-qs(m)
-summary(m)
-selic_2b <- final(m)
-
-m <- seas(x = selic_c, transform.function = "none", regression.aictest = NULL) 
-qs(m)
-summary(m)
-selic_2c <- final(m)
-
-###############
-# Juntando novamente as três séries
-###############
-
-comb <- ts.union(selic_2a, selic_2b, selic_2c)
-selic_final <- pmin(comb[,1], comb[,2], comb[,3], na.rm = TRUE)
-
-# Compara a série ajustada com a série original
-df <- data.frame(seq(as.Date("1996-01-01"), length = length(selic_final), by = "1 month"), selic, selic_final)
-names(df) <- c("Data", "Original", "Série Filtrada")
-p1 <- ggplot(df, aes(Data)) +
-  geom_line(aes(y = selic, colour = "Original")) +
-  geom_line(aes(y = selic_final, colour = "Filtrada")) + 
-  scale_x_date(date_breaks = "12 months", name = "Data", labels = date_format("%m-%Y"))+
-  scale_y_continuous(name = "Selic (%a.a.)")+
-  labs(color="Série") +
-  theme_bw() + theme(axis.text.x = element_text(angle=30, hjust = 1, size = 7))
-p1
-
-rm(p1, p2, selic_4390, selic_2a, selic_2b, selic_2c, selic_a, selic_b, selic_c)
-```
-
-3. Swap DI pré 3 meses
-```{r, eval = FALSE, echo = FALSE}
-ggmonthplot(swap90) + 
-  theme_bw() +
-  scale_y_continuous(name = "Swap DI 90d (%a.a - média)") +
-  labs(title = "Média diária e mensal da taxa Selic", x = "Mês", subtitle = "Nenhuma transformação")
-
-# Gráfico por ano e mês
-ggseasonplot(swap90, year.labels = TRUE) + 
-  geom_point() + 
-  theme_bw() + 
-  scale_y_continuous(name = "Swap DI 90d (%a.a. - média)") +
-  labs(title = "Média mensal da taxa swapDI 90d", x = "Mês", subtitle = "Nenhuma transformação")
-
-bp_ts <- breakpoints(swap90 ~ 1)
-ci_ts <- confint(bp_ts)
-
-Data <- seq(as.Date("1999-09-01"), length = length(swap90), by = "1 month")
-df1 <- melt(data.frame(Data,swap90), id.vars = "Data")
-names(df1) <- c("Data", "Variavel", "Valor")
-
-p1 <- ggplot(df1[which(df1$Variavel == "swap90"),], aes(Data, Valor, colour = Variavel)) +
-        geom_line(alpha = 1, show.legend=F, colour = cores[1])+
-        scale_y_continuous(name="Swap DI 90d (%a.a.)") +
-        scale_x_date(date_breaks = "12 months", name = "Data", labels = date_format("%m-%Y"))+ 
-        geom_vline(xintercept = Data[bp_ts$breakpoints], linetype="longdash")+
-        geom_segment(aes(x = Data[ci_ts$confint[1]], y = min(swap90), xend = Data[ci_ts$confint[5]], yend = min(swap90)))+
-        geom_segment(aes(x = Data[ci_ts$confint[2]], y = min(swap90), xend = Data[ci_ts$confint[6]], yend = min(swap90)))+
-        theme_bw()
-p1 <- p1 + theme(axis.text.x = element_text(angle=25, hjust = 1, size = 6), legend.position = "none")
-p1
-
-#m <- seas(swap90)
-#summary(m) # Series should not be a candidate for seasonal adjustment because the spectrum of the prior adjusted series (Table B1) has no visually significant seasonal peaks.
-
-```
-
-4. PIB mensal
-
-```{r, eval = FALSE, echo = FALSE}
-#######################
-# PIB Mensal          #
-#######################
-cores <- brewer.pal(6, "Dark2")
-ggmonthplot(PIB) + 
-  theme_bw() +
-  scale_y_continuous(name = "PIB (log-dif - média)") +
-  labs(title = "Média diária e mensal da variação do PIB", x = "Mês", subtitle = "Nenhuma transformação")
-
-# Gráfico por ano e mês
-ggseasonplot(PIB, year.labels = TRUE) + 
-  geom_point() + 
-  theme_bw() + 
-  scale_y_continuous(name = "PIB (log-dif - média)") +
-  labs(title = "Média mensal da da variação do PIB", x = "Mês", subtitle = "Nenhuma transformação")
-
-m <- seas(x = PIB, transform.function = "none", regression.aictest = NULL)
-qs(m)
-summary(m)
-# Salva a série final em uma nova variável
-PIB2 <- final(m)
-
-# Compara a série ajustada com a série original
-df <- data.frame(seq(as.Date("1996-01-01"), length = length(PIB), by = "1 month"), PIB, PIB2)
-names(df) <- c("Data", "Original", "Série Filtrada")
-p2 <- ggplot(df, aes(Data)) +
-  geom_line(aes(y = PIB, colour = "Original")) +
-  geom_line(aes(y = PIB2, colour = "Filtrada")) + 
-  scale_x_date(date_breaks = "12 months", name = "Data", labels = date_format("%m-%Y"))+
-  scale_y_continuous(name = "PIB Mensal (variação mensal do índice, base = 11/17)")+
-  labs(color="Variável") +
-  theme_bw()
-p2 + theme(axis.text.x = element_text(angle=25, hjust = 1, size = 8))
-
-rm(PIB, PIBmensal)
-```
-
-5. Câmbio
-
-Ficou como estava. **Lembrar de colocar a análise depois**.
-
-6. IPCA
-
-Ficou como estava. **Lembrar de colocar a análise depois**.
-
-# Novo Bloco de variáveis
 
 ```{r, message = FALSE, warning = FALSE}
 # Auxiliary variables, so I don't need to bother when something changes
@@ -750,7 +287,7 @@ swap90 <- BETS.get("7818", from = inicio_swap, to = fim)
 
 ## Visualizing data
 
-```{r}
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
 # Make dummy observations to complete the swap series - I need to plot the graph. Later I'll drop, treat seasonality and merge with selic
 dummy <- ts(rep(0, length(seq(from = as.Date(inicio), to = as.Date(inicio_swap2), by = "1 month"))),  start = c(1996, 01, 01), frequency = 12)
 ## Binding the series
@@ -812,7 +349,9 @@ grid.arrange(p1ori, p6ori, p3ori, p2ori, p4ori, ncol=1, nrow = 5)
 
 ## Treating for seasonality and structural breaks
 
-1. Capital-Labor Ratio
+The output of the seasonality tests will appear. The analysis is hidden inside the code.
+
+### 1. Capital-Labor Ratio
 
 ```{r, warning = FALSE, message=FALSE}
 
@@ -958,7 +497,7 @@ p1
 rm(capital_trabalho_a, capital_trabalho_b, capital_trabalho_2a, capital_trabalho_2b, p1, capital, trabalho, teste)
 ```
 
-2. Selic (interest rate)
+### 2. Selic (interest rate)
 
 ```{r, message = FALSE, warning = FALSE}
 meses <- ggmonthplot(selic) + 
@@ -1061,9 +600,9 @@ summary(teste)
 rm(p1, p2, selic_4390, selic_2a, selic_2b, selic_2c, selic_a, selic_b, selic_c, teste)
 ```
 
-3. Swap DI pré 3 meses
+### 2. Swap DI pré 3 meses
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 meses <- ggmonthplot(swap90) + 
   theme_bw() +
   scale_y_continuous(name = "Swap DI 90d (%a.a)") +
@@ -1133,9 +672,9 @@ p9
 #dev.off()
 ```
 
-4. PIB mensal
+### 3. PIB mensal
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 #######################
 # PIB Mensal          #
 #######################
@@ -1238,9 +777,9 @@ p3 + theme(axis.text.x = element_text(angle=25, hjust = 1, size = 8))
 
 ```
 
-4. Exchange rate
+### 4. Exchange rate
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 #######################
 # Câmbio              #
 #######################
@@ -1267,8 +806,8 @@ season
 #dev.off()
 
 #pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Fig-Month_CAMBIO.pdf", width = 6, height = 3)
-meses
-#dev.off()
+meses 
+#dev.off() 
 
 bp_ts <- breakpoints(cambio_raw ~ 1)
 ci_ts <- confint(bp_ts)
@@ -1301,9 +840,9 @@ cambio <- cambio_raw
 
 ```
 
-5. IPCA
+### 5. IPCA
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 #######################
 # IPCA                #
 #######################
@@ -1386,7 +925,7 @@ summary(m)
 
 ## Variávels finais após ajuste sazonal
 
-```{r, warning = FALSE, message = FALSE}
+```{r, warning = FALSE, message = FALSE, echo = FALSE}
 # Make dummy observations to complete the swap series - I need to plot the graph. Later I'll drop, treat seasonality and merge with selic
 dummy <- ts(rep(0, length(seq(from = as.Date(inicio), to = as.Date(inicio_swap2), by = "1 month"))),  start = c(1996, 01, 01), frequency = 12)
 ## Binding the series
@@ -1446,7 +985,7 @@ grid.arrange(p1ori, p1a, p6ori, p5a, p3ori, p3a, p2ori, p2a, p4ori, p4a, ncol=2,
 
 ## Descritivas
 
-```{r, results='axis', message=FALSE, warning=FALSE}
+```{r, results='axis', message=FALSE, warning=FALSE, echo = FALSE}
 ### Descriptives
 
 descriptives     <- matrix(NA, nrow = 8, ncol = (ncol(df1)-1))
@@ -1494,7 +1033,56 @@ rm(descriptives, df1, bp_ts, ci_ts, comb, df, df2, m, p1a, p2, p2a, p3, p3a, p4,
 
 # Estimating the BVAR
 
-```{r, eval = FALSE}
+```{r}
+# Junta o swap com a selic
+selic_trim <- ts(selic_final[1:44], start = c(1996, 01, 01), frequency = 12)
+
+# Binding the series
+comb <- ts.union(selic_trim, swap90)
+swap <- pmin(comb[,1], comb[,2], na.rm = TRUE)
+
+#Inflação - Produto - Juros - Câmbio - Desigualdade.
+var1 <- cbind(capital_trabalho_final*100, ipca, PIB*100, swap, cambio) # The bvar function does not allows data.frames
+#var2 <- cbind(capital_trabalho_final, swap, PIB2, cambio, ipca) # The bvar function does not allows data.frames
+names(var1) <- c("capital_trabalho", "ipca", "pib", "swap", "cambio")
+#names(var1) <- c("ipca", "pib", "swap", "cambio","capital_trabalho") # Ficou uma merda
+
+#var1 <- c(1,2,3,4,5)
+
+pos_ct     <- grep("capital_trabalho", names(var1))
+pos_swap   <- grep("swap", names(var1))
+pos_pib    <- grep("pib", names(var1))
+pos_cambio <- grep("cambio", names(var1))
+pos_ipca   <- grep("ipca", names(var1))
+
+
+set.seed(6969)
+
+nburn.    <- 1000000 # Burn the first 100kk replications
+nrep.     <- 100000 # Estimate another 100k times after burn in
+thinfac.  <- 4 # But keep only 1 in 4 estimates
+p.        <- 1 # Number of lags
+tau.      <- 48 - p. # Number of observations to use as prior
+nf.       <- 1 # Number of forecast periods
+k_B.      <- 6 # Fator de inflação na priori
+k_A.      <- 4 # Fator de inflação na priori
+
+# No idea what's this for
+tamanho <- floor(1/thinfac.*nrep.)
+# número de tempos
+tempo <- nrow(var1)
+
+pm <- proc.time()
+fit1 <- bvar.sv.tvp(var1, p=p., tau = tau., nburn = nburn., nrep = nrep., thinfac = thinfac., nf = nf., k_B = k_B., k_A = k_A.)
+saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit.rds") 
+#fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit.rds") 
+#rm(fit1, ira)
+proc.time() - pm
+```
+
+Caso queira ver qual a priori, descomente esses blocos de código (que estão ocultos).
+
+```{r, eval = FALSE, echo = FALSE}
 # Essa função é para eu descobrir o que ele está usando de priori.
 
 library(compiler)
@@ -1610,147 +1198,8 @@ makeregs <- cmpfun(function(dat,cut,p){
 })
 ```
 
-```{r}
-# Junta o swap com a selic
-selic_trim <- ts(selic_final[1:44], start = c(1996, 01, 01), frequency = 12)
 
-# Binding the series
-comb <- ts.union(selic_trim, swap90)
-swap <- pmin(comb[,1], comb[,2], na.rm = TRUE)
-
-#Inflação - Produto - Juros - Câmbio - Desigualdade.
-var1 <- cbind(capital_trabalho_final*100, ipca, PIB*100, swap, cambio) # The bvar function does not allows data.frames
-#var2 <- cbind(capital_trabalho_final, swap, PIB2, cambio, ipca) # The bvar function does not allows data.frames
-names(var1) <- c("capital_trabalho", "ipca", "pib", "swap", "cambio")
-#names(var1) <- c("ipca", "pib", "swap", "cambio","capital_trabalho") # Ficou uma merda
-
-#var1 <- c(1,2,3,4,5)
-
-pos_ct     <- grep("capital_trabalho", names(var1))
-pos_swap   <- grep("swap", names(var1))
-pos_pib    <- grep("pib", names(var1))
-pos_cambio <- grep("cambio", names(var1))
-pos_ipca   <- grep("ipca", names(var1))
-
-
-set.seed(6969)
-
-#nburn.    <- 350000 # Burn the first 350k replications
-nburn.    <- 1000000 # Burn the first 100kk replications
-nrep.     <- 100000 # Estimate another 100k times after burn in
-thinfac.  <- 4 # But keep only 1 in 4 estimates
-p.        <- 1 # Number of lags
-tau.      <- 48 # Number of observations to use as prior
-nf.       <- 1 # Number of forecast periods
-k_B.      <- 6 # Fator de inflação na priori
-k_A.      <- 4 # Fator de inflação na priori
-
-# No idead what's this for
-tamanho <- floor(1/thinfac.*nrep.)
-# número de tempos
-tempo <- nrow(var1)
-
-pm <- proc.time()
-fit1 <- bvar.sv.tvp(var1, p=p., tau = tau., nburn = nburn., nrep = nrep., thinfac = thinfac., nf = nf., k_B = k_B., k_A = k_A.)
-#saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit2.rds") # Fit 2 I tried removing seasonality first on capital-labor
-saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit500k.rds")
-#fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit.rds")
-#rm(fit1, ira)
-proc.time() - pm
-```
-
-```{r, echo = FALSE}
-#rm(fit1) 
-# Junta o swap com a selic
-selic_trim <- ts(selic_final[1:44], start = c(1996, 01, 01), frequency = 12)
- 
-# Binding the series
-comb <- ts.union(selic_trim, swap90)
-swap <- pmin(comb[,1], comb[,2], na.rm = TRUE)
-
-#Inflação - Produto - Juros - Câmbio - Desigualdade.
-var1 <- cbind(ts(capital_trabalho_diff[1:(length(capital_trabalho_diff))], start=c(1996,02,01), frequency = 12)*100, ts(ipca[2:length(ipca)], start = c(1996, 02, 01), frequency = 12), ts(PIB[2:length(PIB)], start = c(1996, 02, 01), frequency = 12)*100, ts(swap[2:length(swap)], start = c(1996, 02, 01), frequency = 12), ts(cambio[2:length(cambio)], start = c(1996, 02, 01), frequency = 12)) # The bvar function does not allows data.frames
-#var2 <- cbind(capital_trabalho_final, swap, PIB2, cambio, ipca) # The bvar function does not allows data.frames
-names(var1) <- c("capital_trabalho", "ipca", "pib", "swap", "cambio")
-#names(var1) <- c("ipca", "pib", "swap", "cambio","capital_trabalho") # Ficou uma merda
-
-pos_ct     <- grep("capital_trabalho", names(var1))
-pos_swap   <- grep("swap", names(var1))
-pos_pib    <- grep("pib", names(var1))
-pos_cambio <- grep("cambio", names(var1))
-pos_ipca   <- grep("ipca", names(var1))
-
-set.seed(6969)
-
-nburn.    <- 350000 # Burn the first 350k replications
-nrep.     <- 100000 # Estimate another 100k times after burn in
-thinfac.  <- 4 # But keep only 1 in 4 estimates
-p.        <- 1 # Number of lags
-tau.      <- 48 # Number of observations to use as prior
-nf.       <- 1 # Number of forecast periods
-k_B.      <- 6 # Fator de inflação na priori
-k_A.      <- 4 # Fator de inflação na priori
-
-# No idead what's this for
-tamanho <- floor(1/thinfac.*nrep.)
-# número de tempos
-tempo <- nrow(var1)
-
-pm <- proc.time()
-fit1 <- bvar.sv.tvp(var1, p=p., tau = tau., nburn = nburn., nrep = nrep., thinfac = thinfac., nf = nf., k_B = k_B., k_A = k_A.)
-saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit3.rds") # Fit 3 I tried removing seasonality first and took first diff on capital-labor
-#saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit.rds")
-fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit3.rds")
-#rm(fit1, ira)
-proc.time() - pm
-
-rm(fit1)
-
-# Junta o swap com a selic
-selic_trim <- ts(selic_final[1:44], start = c(1996, 01, 01), frequency = 12)
-
-# Binding the series
-comb <- ts.union(selic_trim, swap90)
-swap <- pmin(comb[,1], comb[,2], na.rm = TRUE)
-
-#Inflação - Produto - Juros - Câmbio - Desigualdade.
-var1 <- cbind(capital_trabalho_diff*100, ts(ipca[2:length(ipca)], start = c(1996, 02, 01), frequency = 12), ts(PIB2[2:(length(PIB2)-1)], start = c(1996, 02, 01), frequency = 12)/10^4, ts(swap[2:length(swap)], start = c(1996, 02, 01), frequency = 12), ts(cambio[2:length(cambio)], start = c(1996, 02, 01), frequency = 12)) # The bvar function does not allows data.frames
-#var2 <- cbind(capital_trabalho_final, swap, PIB2, cambio, ipca) # The bvar function does not allows data.frames
-names(var1) <- c("capital_trabalho", "ipca", "pib", "swap", "cambio")
-#names(var1) <- c("ipca", "pib", "swap", "cambio","capital_trabalho") # Ficou uma merda
-
-pos_ct     <- grep("capital_trabalho", names(var1))
-pos_swap   <- grep("swap", names(var1))
-pos_pib    <- grep("pib", names(var1))
-pos_cambio <- grep("cambio", names(var1))
-pos_ipca   <- grep("ipca", names(var1))
-
-set.seed(6969)
-
-nburn.    <- 350000 # Burn the first 350k replications
-nrep.     <- 100000 # Estimate another 100k times after burn in
-thinfac.  <- 4 # But keep only 1 in 4 estimates
-p.        <- 1 # Number of lags
-tau.      <- 48 # Number of observations to use as prior
-nf.       <- 1 # Number of forecast periods
-k_B.      <- 6 # Fator de inflação na priori
-k_A.      <- 4 # Fator de inflação na priori
-
-# No idead what's this for
-tamanho <- floor(1/thinfac.*nrep.)
-# número de tempos
-tempo <- nrow(var1)
-
-pm <- proc.time()
-fit1 <- bvar.sv.tvp(var1, p=p., tau = tau., nburn = nburn., nrep = nrep., thinfac = thinfac., nf = nf., k_B = k_B., k_A = k_A.)
-saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit4.rds") # Fit 4 i tried the PIB without first difference
-fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit4.rds")
-#rm(fit1, ira)
-proc.time() - pm
-rm(fit1)
-```
-
-```{r, eval = FALSE}
+```{r, eval = FALSE, echo = FALSE}
 priori <- tsprior2(var1[1:(tau.+p.),],p.,2000)
 
 B_0_prmean <- priori$B_OLS
@@ -1765,7 +1214,7 @@ sigma_prmean <- priori$sigma_OLS
 
 ## Alguns gráficos
 
-```{r}
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
 ## Colocando as datas como strings
 tm1 <- as.yearmon(time(var1))
 
@@ -1784,9 +1233,9 @@ gp <- seq(year(gp_ini), year(tail(Data,1)), 1)
 ### Funções impulso resposta
 
 Peguei a explicação daqui [daqui](https://github.com/FK83/bvarsv/blob/master/bvarsv_Nov2015_website.pdf):
-A FIR estima o impacto de um choque unitário em algum elemento de $\varepsilon_t$. Os elementos de $c_t$, $B_{j,t}$, $A_t$ e $\Sigma_t$ em (1) são mantidos fixos em seus valores em $t$. Note que a ordem das variáveis importa e deve ser justificada por argumentos econômicos. As FIR contém os percentis 5, 25, 50, 75 e 95.
+A FIR estima o impacto de um choque unitário em algum elemento de $\varepsilon_t$. Os elementos de $c_t$, $B_{j,t}$ e $A_t$ em (1) são mantidos fixos em seus valores em $t$, mas os elementos de $\Sigma_t$ são substituídos pela média de todos os períodos. Note que a ordem das variáveis importa e deve ser justificada por argumentos econômicos. As FIR contém os percentis 5, 25, 50, 75 e 95.
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, message = FALSE}
 # Funções auxiliares
 mytheme_cima <- theme_bw() + 
   theme(axis.title.x=element_blank(),
@@ -1804,9 +1253,9 @@ mytheme_baixo <- theme_bw() +
         plot.title = element_text(size=6, vjust = -0.5),
         axis.text.y=element_text(size = 5.5),
         plot.margin = unit(c(0,1,1,0), "mm"))
-
+ 
 number_ticks <- function(n) {function(limits) pretty(limits, n)}
-
+ 
 nhor <- 48
 ```
 
@@ -1814,10 +1263,10 @@ nhor <- 48
 
 ### Em todas variáveis do modelo, no último período
 
-```{r, echo = FALSE}
-
+```{r, echo = FALSE, message = FALSE}
+ 
 # Último período (fev 2018)
-
+ 
 ira <- impulse.responses(fit1, impulse.variable = pos_swap, response.variable = pos_ct, scenario = 3, nhor = 48, draw.plot = FALSE)
 
 
@@ -1941,11 +1390,11 @@ dev.off()
 ```
 
 ### Na razão capital trabalho
-```{r, echo = FALSE}
+```{r, echo = FALSE, message = FALSE}
 ################################################################
-# Função Impulso resposta do swap na razão capital-trabalho
+# Função Impulso resposta do swap na razão capital-trabalho 
 ################################################################
-
+ 
 # Último período (fev 2018)
 ira <- impulse.responses(fit1, impulse.variable = pos_swap, response.variable = pos_ct, scenario = 3, nhor = 48, draw.plot = FALSE)
 #dev.off()
@@ -2173,16 +1622,15 @@ ira_09 <- ggplot(data = ira2, aes(lag,media)) +
             scale_x_continuous(breaks=number_ticks(10))+
             geom_hline(yintercept = 0, size=0.5)+
             mytheme_baixo
-
+ 
 pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-Swap-CT.pdf", width = 6, height = 6)
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
-dev.off()
-
+#dev.off()
 ```
 
 ### No PIB
 
-```{r}
+```{r, echo = FALSE, message = FALSE}
 ################################################################
 # Função Impulso resposta do swap no PIB
 ################################################################
@@ -2215,7 +1663,7 @@ ira <- impulse.responses(fit1, impulse.variable = pos_swap, response.variable = 
 ira2 <- data.frame(seq(1:nhor), t(apply(ira$irf, 2,stat.helper2)))
 names(ira2) <- c("lag", "p5", "p25", "media", "p75", "p95")
 
-ira_01 <- ggplot(data = ira2, aes(lag,media)) +
+ira_01 <- ggplot(data = ira2, aes(lag,media)) + 
             geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
             geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
             geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
@@ -2248,7 +1696,7 @@ ira_02 <- ggplot(data = ira2, aes(lag,media)) +
             geom_ribbon(aes(x=lag, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
             geom_ribbon(aes(x=lag, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
             xlab("Meses") + ylab("Var. % PIB") + ggtitle("Junho/2001 (t=18)") +
-            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_y_continuous(breaks = number_ticks(10)) + 
             scale_x_continuous(breaks=number_ticks(10))+
             geom_hline(yintercept = 0, size=0.5)+
             mytheme_cima
@@ -2256,11 +1704,11 @@ ira_02 <- ggplot(data = ira2, aes(lag,media)) +
 # junho 2002, 03, t=30
 ira <- impulse.responses(fit1, impulse.variable = pos_swap, response.variable = pos_pib, scenario = 3, nhor = 48, t=30, draw.plot = FALSE)
 
-ira2 <- data.frame(seq(1:nhor), t(apply(ira$irf, 2,stat.helper2)))
+ira2 <- data.frame(seq(1:nhor), t(apply(ira$irf, 2,stat.helper2))) 
 names(ira2) <- c("lag", "p5", "p25", "media", "p75", "p95")
 
 ira_03 <- ggplot(data = ira2, aes(lag,media)) +
-            geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") + 
             geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
             geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
             geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
@@ -2420,9 +1868,9 @@ dev.off()
 
 ### No Câmbio
 
-```{r}
+```{r, echo = FALSE, message = FALSE}
 ################################################################
-# Função Impulso resposta do swap no câmbio
+# Função Impulso resposta do swap no câmbio 
 ################################################################
 
 ira <- impulse.responses(fit1, impulse.variable = pos_swap, response.variable = pos_cambio, scenario = 3, nhor = 48, draw.plot = FALSE)
@@ -2661,11 +2109,11 @@ dev.off()
 
 ### No IPCA
 
-```{r}
+```{r, echo = FALSE, message = FALSE}
 ################################################################
-# Função Impulso resposta swap no IPCA
+# Função Impulso resposta swap no IPCA 
 ################################################################
-##pdf(file = "C:\\Users\\aisha\\Documents\\Var da Aisha\\Figuras\\FIR\\Fig_FIR-swap_ipca2.pdf", width = 6, height = 3)
+
 ira <- impulse.responses(fit1, impulse.variable = pos_swap, response.variable = pos_ipca, scenario = 3, nhor = 48, draw.plot = FALSE)
 
 ira2 <- data.frame(seq(1:nhor), t(apply(ira$irf, 2,stat.helper2)))
@@ -2903,7 +2351,7 @@ dev.off()
 
 ### Na razão capital trabalho
 
-```{r}
+```{r, echo = FALSE, message = FALSE}
 ################################################################
 # Função Impulso resposta do PIB na razão capital trabalho
 ################################################################
@@ -3143,7 +2591,7 @@ dev.off()
 
 ### No Câmbio
 
-```{r}
+```{r, echo = FALSE, message = FALSE}
 ################################################################
 # Função Impulso resposta do PIB no câmbio
 ################################################################
@@ -3382,9 +2830,9 @@ dev.off()
 
 ### No swap
 
-```{r}
+```{r, echo = FALSE, message = FALSE}
 ################################################################
-# Função Impulso resposta do PIB na swap
+# Função Impulso resposta do PIB na swap 
 ################################################################
 ira <- impulse.responses(fit1, impulse.variable = pos_pib, response.variable = pos_swap, scenario = 3, nhor = 48, draw.plot = FALSE)
 
@@ -3611,7 +3059,7 @@ ira_09 <- ggplot(data = ira2, aes(lag,media)) +
             scale_x_continuous(breaks=number_ticks(10))+
             geom_hline(yintercept = 0, size=0.5)+
             mytheme_baixo
-
+ 
 pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-PIB-SWAP.pdf", width = 6, height = 6)
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
 dev.off()
@@ -3619,7 +3067,7 @@ dev.off()
 
 ### No IPCA
 
-```{r}
+```{r, echo = FALSE, message = FALSE}
 ################################################################
 # Função Impulso resposta do PIB no IPCA
 ################################################################
@@ -3848,7 +3296,7 @@ ira_09 <- ggplot(data = ira2, aes(lag,media)) +
             scale_x_continuous(breaks=number_ticks(10))+
             geom_hline(yintercept = 0, size=0.5)+
             mytheme_baixo
-
+ 
 pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-PIB-IPCA.pdf", width = 6, height = 6)
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
 dev.off()
@@ -3858,9 +3306,9 @@ dev.off()
 
 ### Na razão capital-trabalho
 
-```{r}
+```{r, echo = FALSE, message = FALSE}
 ################################################################
-# Função Impulso resposta do Cambio na razão capital trabalho
+# Função Impulso resposta do Cambio na razão capital trabalho 
 ################################################################
 ira <- impulse.responses(fit1, impulse.variable = pos_cambio, response.variable = pos_ct, scenario = 3, nhor = 48, draw.plot = FALSE)
 
@@ -4092,16 +3540,15 @@ pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Disse
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
 dev.off()
 
-
 #write.csv(ira$irf, "C:\\Users\\aisha\\Documents\\Var da Aisha\\fir_cambio_ct.csv")
 ```
 
 # No Swap
 
-```{r}
+```{r, echo = FALSE, message = FALSE}
 ################################################################
 # Função Impulso resposta do Cambio no SWAP
-################################################################
+################################################################ 
 ira <- impulse.responses(fit1, impulse.variable = pos_cambio, response.variable = pos_swap, scenario = 3, nhor = 48, draw.plot = FALSE)
 
 ira2 <- data.frame(seq(1:nhor), t(apply(ira$irf, 2,stat.helper2)))
@@ -4332,17 +3779,16 @@ pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Disse
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
 dev.off()
 
-
 #write.csv(ira$irf, "C:\\Users\\aisha\\Documents\\Var da Aisha\\fir_cambio_ct.csv")
 ```
 
 ## No IPCA
 
-```{r}
+```{r, echo = FALSE, message = FALSE}
 ################################################################
 # Função Impulso resposta do Cambio no IPCA
 ################################################################
-ira <- impulse.responses(fit1, impulse.variable = pos_cambio, response.variable = pos_ipca, scenario = 3, nhor = 48, draw.plot = FALSE)
+ira <- impulse.responses(fit1, impulse.variable = pos_cambio, response.variable = pos_ipca, scenario = 3, nhor = 48, draw.plot = FALSE) 
 
 ira2 <- data.frame(seq(1:nhor), t(apply(ira$irf, 2,stat.helper2)))
 names(ira2) <- c("lag", "p5", "p25", "media", "p75", "p95")
@@ -4572,17 +4018,16 @@ pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Disse
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
 dev.off()
 
-
 #write.csv(ira$irf, "C:\\Users\\aisha\\Documents\\Var da Aisha\\fir_cambio_ct.csv")
 ```
 
 ## No PIB
 
-```{r}
+```{r, echo = FALSE, message = FALSE}
 ################################################################
 # Função Impulso resposta do Cambio no PIB
 ################################################################
-ira <- impulse.responses(fit1, impulse.variable = pos_cambio, response.variable = pos_pib, scenario = 3, nhor = 48, draw.plot = FALSE)
+ira <- impulse.responses(fit1, impulse.variable = pos_cambio, response.variable = pos_pib, scenario = 3, nhor = 48, draw.plot = FALSE) 
 
 ira2 <- data.frame(seq(1:nhor), t(apply(ira$irf, 2,stat.helper2)))
 names(ira2) <- c("lag", "p5", "p25", "media", "p75", "p95")
@@ -4812,7 +4257,6 @@ pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Disse
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
 dev.off()
 
-
 #write.csv(ira$irf, "C:\\Users\\aisha\\Documents\\Var da Aisha\\fir_cambio_ct.csv")
 ```
 
@@ -4820,12 +4264,12 @@ dev.off()
 
 ### Ipca na razão capital-trabalho
 
-```{r}
+```{r, echo = FALSE, message = FALSE}
 ################################################################
 # Função Impulso resposta do IPCA na razão capital trabalho
 ################################################################
 
-ira <- impulse.responses(fit1, impulse.variable = pos_ipca, response.variable = pos_ct, scenario = 3, nhor = 48, draw.plot = FALSE)
+ira <- impulse.responses(fit1, impulse.variable = pos_ipca, response.variable = pos_ct, scenario = 3, nhor = 48, draw.plot = FALSE) 
 
 ira2 <- data.frame(seq(1:nhor), t(apply(ira$irf, 2,stat.helper2)))
 names(ira2) <- c("lag", "p5", "p25", "media", "p75", "p95")
@@ -5055,21 +4499,19 @@ pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Disse
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
 dev.off()
 
-
 #write.csv(ira$irf, "C:\\Users\\aisha\\Documents\\Var da Aisha\\fir_ipca_ct.csv")
 ```
 
-
 ### Ipca no swap
 
-```{r}
+```{r, echo = FALSE, message = FALSE}
 ################################################################
 # Função Impulso resposta do IPCA na swap
 ################################################################
 ira <- impulse.responses(fit1, impulse.variable = pos_ipca, response.variable = pos_swap, scenario = 3, nhor = 48, draw.plot = FALSE)
 
 ira2 <- data.frame(seq(1:nhor), t(apply(ira$irf, 2,stat.helper2)))
-names(ira2) <- c("lag", "p5", "p25", "media", "p75", "p95")
+names(ira2) <- c("lag", "p5", "p25", "media", "p75", "p95") 
 
 ira_final <- ggplot(data = ira2, aes(lag,media)) +
             geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
@@ -5293,7 +4735,7 @@ ira_09 <- ggplot(data = ira2, aes(lag,media)) +
             mytheme_baixo
 
 
-
+ 
 pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-IPCA-SWAP.pdf", width = 6, height = 6)
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
 dev.off()
@@ -5301,8 +4743,7 @@ dev.off()
 
 ### IPCA na taxa de câmbio
 
-
-```{r}
+```{r, echo = FALSE, message = FALSE}
 ################################################################
 # Função Impulso resposta do IPCA na Cambio
 ################################################################
@@ -5310,7 +4751,7 @@ ira <- impulse.responses(fit1, impulse.variable = pos_ipca, response.variable = 
 
 ira2 <- data.frame(seq(1:nhor), t(apply(ira$irf, 2,stat.helper2)))
 names(ira2) <- c("lag", "p5", "p25", "media", "p75", "p95")
-
+ 
 ira_final <- ggplot(data = ira2, aes(lag,media)) +
             geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
             geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
@@ -5532,7 +4973,7 @@ ira_09 <- ggplot(data = ira2, aes(lag,media)) +
             geom_hline(yintercept = 0, size=0.5)+
             mytheme_baixo
 
-
+ 
 pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-IPCA-CAMBIO.pdf", width = 6, height = 6)
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
 dev.off()
@@ -5540,7 +4981,7 @@ dev.off()
 
 ### IPCA no PIB
 
-```{r}
+```{r, echo = FALSE, message = FALSE}
 ################################################################
 # Função Impulso resposta do IPCA na PIB
 ################################################################
@@ -5548,7 +4989,7 @@ ira <- impulse.responses(fit1, impulse.variable = pos_ipca, response.variable = 
 
 ira2 <- data.frame(seq(1:nhor), t(apply(ira$irf, 2,stat.helper2)))
 names(ira2) <- c("lag", "p5", "p25", "media", "p75", "p95")
-
+ 
 ira_final <- ggplot(data = ira2, aes(lag,media)) +
             geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
             geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
@@ -5770,7 +5211,7 @@ ira_09 <- ggplot(data = ira2, aes(lag,media)) +
             geom_hline(yintercept = 0, size=0.5)+
             mytheme_baixo
 
-
+ 
 pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-IPCA-PIB.pdf", width = 6, height = 6)
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
 dev.off()
@@ -5778,7 +5219,7 @@ dev.off()
 
 ## Avaliando os parâmetros
 
-```{r, message = FALSE, warning = FALSE}
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
 #rm(ira)
 
 # Saving parameters
@@ -5799,15 +5240,12 @@ beta_pib_ct     <- parameter.draws(fit1, type = "lag1", row = pos_ct, col = pos_
 beta_cambio_ct  <- parameter.draws(fit1, type = "lag1", row = pos_ct, col = pos_cambio)
 beta_ipca_ct    <- parameter.draws(fit1, type = "lag1", row = pos_ct, col = pos_ipca)
 
-
 # salva o fit em um csv e limpa da memória
 #saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit.rds")
 #fit1 <- readRDS("C:\\Users\\aisha\\Documents\\Var da Aisha\\Var7\\fit20.rds")
 #rm(fit1)
 
 # Convert stuff into mcmc objects
-
-
 mcmc_beta_ct       <- mcmc(beta_ct, start = 1, end = dim(beta_ct)[1])
 mcmc_beta_swap     <- mcmc(beta_swap, start = 1, end = dim(beta_swap)[1])
 mcmc_beta_pib      <- mcmc(beta_pib, start = 1, end = dim(beta_pib)[1])
@@ -5826,99 +5264,541 @@ mcmc_beta_cambio_ct <- mcmc(beta_cambio_ct, start = 1, end = dim(beta_cambio_ct)
 mcmc_beta_ipca_ct   <- mcmc(beta_ipca_ct, start = 1, end = dim(beta_ipca_ct)[1])
 ```
 
-Os gráficos abaixo contém os betas (esq) e volatilidade (dir) ao longo do tempo, com o 16o e o 68o percentis (como foi feito no artigo do Primiceri).  
+Os gráficos abaixo contém os betas (esq) e volatilidade (dir) ao longo do tempo, com o 16o e o 68o percentis (como foi feito no artigo do Primiceri). 
 
-```{r}
-# Gráfico do desvio padrão do resíduo da razão capital trabalho
-x1     <- t(apply(sqrt(sd_ct), 2, stat.helper))
-x1betact <- t(apply(beta_ct, 2, stat.helper))
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+Data2 <- Data[(tau. + p.+1):length(Data)]
 
-#x1beta <- cbind(desc_betact$quantiles[,1], desc_betact$statistics[,1], desc_betact$quantiles[,5]) # ficou muito amplo mas meu coração não deixou eu apagar essa linha
-desc_betact <- summary(mcmc_beta_ct)
-desc_sdct   <- summary(mcmc_sd_ct)
+datemarks <- seq(1, length(Data2), by = 12)
 
-##pdf(file = "C:\\Users\\aisha\\Documents\\Var da Aisha\\Figuras\\Coeficientes\\Fig_COEF-ct2.pdf", width = 6, height = 3)
-old.par <- par(mfrow=c(1,2), mar=c(2,2,0.5,0.5))  # direita, baixo, cima, esquerda
-matplot2(x = xax, y = x1betact, ylim = c(min(desc_betact$quantiles[,1]), max(desc_betact$quantiles[,5])), col = cols1, main = "", xlab = "Tempo")
-matplot2(x = xax, y = x1, ylim = c(sqrt(min(desc_sdct$quantiles[,1])), sqrt(max(desc_sdct$quantiles[,5]))), col = cols1, main = "", xlab = "Tempo")
-par(old.par) # resets par()
-##dev.off()
-
-
-#rm(desc_betact, desc_sdct)
+mytheme_baixo2 <- theme_bw() + 
+  theme(axis.text.x=element_text(angle=90, hjust = 10, size = 6, vjust = 0),
+        axis.title.y = element_blank(),
+        axis.title.x=element_blank(),
+        plot.title = element_text(size=6, vjust = -0.5),
+        axis.text.y=element_text(size = 5.5),
+        plot.margin = unit(c(0,1,1,0), "mm"))
 ```
 
-```{r}
+### Razão Capital-Trabalho
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+# Gráfico do coeficiente da variável defasada na razão capital-trabalho e desvio padrão do resíduo da equação
+x1        <- t(apply(sqrt(sd_ct), 2, stat.helper))
+x1betact  <- t(apply(beta_ct, 2, stat.helper))
+
+x1betact2 <- t(apply(beta_ct, 2, stat.helper2))
+x12       <- t(apply(sqrt(sd_ct), 2, stat.helper2))
+
+# Novo Gráfico - coeficientes
+df <- data.frame(Data2, x1betact, x1)
+names(df) <- c("Data", "p16beta", "beta", "p84beta", "p16sd", "sd", "p84sd")
+
+graph_beta_ct <- ggplot(data = df, aes(Data,beta)) +
+                  geom_line(aes(y = p16beta), colour = cols1[2], linetype = "dashed") +
+                  geom_line(aes(y = p84beta), colour = cols1[2], linetype = "dashed")+
+                  geom_line(aes(y = beta), colour = 'skyblue4', size = 0.25)+
+                  geom_ribbon(aes(x=Data, ymax=beta, ymin=p16beta), fill= cols1[1], alpha=.3) +
+                  geom_ribbon(aes(x=Data, ymax=p84beta, ymin=beta), fill= cols1[1], alpha=.3) +
+                  xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente da Razão Capital-Trabalho defasada em sua própria equação (IC de 16 a 64)") +
+                  scale_y_continuous(breaks = number_ticks(10)) +
+                  scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+                  #geom_hline(yintercept = 0, size=0.5)+
+                  mytheme_baixo2
+
+graph_beta_ct_alt <- ggplot(data = df, aes(Data,beta)) +
+                  geom_line(aes(y = p16beta), colour = cols1[2], linetype = "dashed") +
+                  geom_line(aes(y = p84beta), colour = cols1[2], linetype = "dashed")+
+                  geom_line(aes(y = beta), colour = 'skyblue4', size = 0.25)+
+                  geom_ribbon(aes(x=Data, ymax=beta, ymin=p16beta), fill= cols1[1], alpha=.3) +
+                  geom_ribbon(aes(x=Data, ymax=p84beta, ymin=beta), fill= cols1[1], alpha=.3) +
+                  xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente da Razão Capital-Trabalho defasada em sua própria equação (IC de 16 a 64)") +
+                  scale_y_continuous(breaks = number_ticks(10)) +
+                  scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+                  geom_hline(yintercept = 0, size=0.5)+
+                  mytheme_baixo2
+
+df2 <- data.frame(Data2, x1betact2)
+names(df2) <- c("Data", "p5", "p25", "media", "p75", "p95")
+ 
+graph_beta_ct2 <- ggplot(data = df2, aes(Data,media)) +
+            geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = media), size = 0.25)+
+            geom_ribbon(aes(x=Data, ymax=p25, ymin=p5), fill="skyblue3", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=media, ymin=p25), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
+            xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente da Razão Capital-Trabalho defasada em sua própria equação") +
+            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+            #geom_hline(yintercept = 0, size=0.5)+
+            mytheme_baixo2
+
+# Novo Gráfico - volatilidade
+graph_sd_ct <- ggplot(data = df, aes(Data,sd)) +
+                  #geom_line(aes(y = p16sd), colour = cols1[2], linetype = "dashed") +
+                  #geom_line(aes(y = p84sd), colour = cols1[2], linetype = "dashed")+
+                  geom_line(aes(y = sd), colour = 'skyblue4', size = 0.25)+
+                  geom_ribbon(aes(x=Data, ymax=sd, ymin=p16sd), fill= cols1[1], alpha=.3) +
+                  geom_ribbon(aes(x=Data, ymax=p84sd, ymin=sd), fill= cols1[1], alpha=.3) +
+                  xlab("Data") + ylab("Desvio Padrão") + ggtitle("Volatilidade na equação da Razão Capital-Trabalho (IC de 16 a 64)") +
+                  scale_y_continuous(breaks = number_ticks(10)) +
+                  scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+                  #geom_hline(yintercept = 0, size=0.5)+
+                  mytheme_baixo2
+
+df2 <- data.frame(Data2, x12)
+names(df2) <- c("Data", "p5", "p25", "media", "p75", "p95")
+ 
+graph_sd_ct2 <- ggplot(data = df2, aes(Data,media)) +
+            #geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            #geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
+            #geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
+            #geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = media), size = 0.25)+
+            geom_ribbon(aes(x=Data, ymax=p25, ymin=p5), fill="skyblue3", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=media, ymin=p25), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
+            xlab("Data") + ylab("Desvio Padrão") + ggtitle("Volatilidade na equação da Razão Capital-Trabalho") +
+            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+            #geom_hline(yintercept = 0, size=0.5)+
+            mytheme_baixo2
+```
+
+Coeficiente (da própria variável defasada) e desvio padrão do resíduo, usando a média e os quantis 16 e 84 (os mesmos do primiceri) - esquerda - e mesmo gráfico, porém com o intervalo entre o 5 e 95 (área azul) quantis e 25 e 75 quantis (área cinza):
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+grid.arrange(graph_beta_ct, graph_beta_ct2, graph_sd_ct, graph_sd_ct2, ncol = 2, nrow = 2)
+```
+
+### Swap
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
 # Gráfico do desvio padrão do resíduo do swap
 x2 <- t(apply(sqrt(sd_swap), 2, stat.helper))
 x2betaswap <- t(apply(beta_swap, 2, stat.helper))
 
-desc_betaswap <- summary(mcmc_beta_swap)
-desc_sdswap   <- summary(mcmc_sd_swap)
+x22 <- t(apply(sqrt(sd_swap), 2, stat.helper2))
+x2betaswap2 <- t(apply(beta_swap, 2, stat.helper2))
 
-##pdf(file = "C:\\Users\\aisha\\Documents\\Var da Aisha\\Figuras\\Coeficientes\\Fig_COEF-swap.pdf", width = 6, height = 3)
-old.par <- par(mfrow=c(1,2), mar=c(2,2,0.5,0.5))  # direita, baixo, cima, esquerda
-matplot2(x = xax, y = x2betaswap, ylim = c(min(desc_betaswap$quantiles[,1]), max(desc_betaswap$quantiles[,5])), col = cols1, main = "", xlab = "Tempo")
-matplot2(x = xax, y = x2, ylim = c(sqrt(min(desc_sdswap$quantiles[,1])), sqrt(max(desc_sdswap$quantiles[,5]))), col = cols1, main = "", xlab = "Tempo")
-par(old.par) # resets par()
-##dev.off()
+# Novo Gráfico - coeficientes
+df <- data.frame(Data2, x2betaswap, x2)
+names(df) <- c("Data", "p16beta", "beta", "p84beta", "p16sd", "sd", "p84sd")
 
-#rm(desc_betaswap, desc_sdswap)
+graph_beta_swap <- ggplot(data = df, aes(Data,beta)) +
+                  geom_line(aes(y = p16beta), colour = cols1[2], linetype = "dashed") +
+                  geom_line(aes(y = p84beta), colour = cols1[2], linetype = "dashed")+
+                  geom_line(aes(y = beta), colour = 'skyblue4', size = 0.25)+
+                  geom_ribbon(aes(x=Data, ymax=beta, ymin=p16beta), fill= cols1[1], alpha=.3) +
+                  geom_ribbon(aes(x=Data, ymax=p84beta, ymin=beta), fill= cols1[1], alpha=.3) +
+                  xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do Swap defasado em sua própria equação (IC de 16 a 64)") +
+                  scale_y_continuous(breaks = number_ticks(10)) +
+                  scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+                  #geom_hline(yintercept = 0, size=0.5)+
+                  mytheme_baixo2
+
+graph_beta_swap_alt <- ggplot(data = df, aes(Data,beta)) +
+                  geom_line(aes(y = p16beta), colour = cols1[2], linetype = "dashed") +
+                  geom_line(aes(y = p84beta), colour = cols1[2], linetype = "dashed")+
+                  geom_line(aes(y = beta), colour = 'skyblue4', size = 0.25)+
+                  geom_ribbon(aes(x=Data, ymax=beta, ymin=p16beta), fill= cols1[1], alpha=.3) +
+                  geom_ribbon(aes(x=Data, ymax=p84beta, ymin=beta), fill= cols1[1], alpha=.3) +
+                  xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do Swap defasado em sua própria equação (IC de 16 a 64)") +
+                  scale_y_continuous(breaks = number_ticks(10)) +
+                  scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+                  geom_hline(yintercept = 0, size=0.5)+
+                  mytheme_baixo2
+
+df2 <- data.frame(Data2, x2betaswap2)
+names(df2) <- c("Data", "p5", "p25", "media", "p75", "p95")
+ 
+graph_beta_swap2 <- ggplot(data = df2, aes(Data,media)) +
+            geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = media), size = 0.25)+
+            geom_ribbon(aes(x=Data, ymax=p25, ymin=p5), fill="skyblue3", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=media, ymin=p25), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
+            xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do Swap defasado em sua própria equação") +
+            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+            #geom_hline(yintercept = 0, size=0.5)+
+            mytheme_baixo2
+
+# Novo Gráfico - volatilidade
+graph_sd_swap <- ggplot(data = df, aes(Data,sd)) +
+                  #geom_line(aes(y = p16sd), colour = cols1[2], linetype = "dashed") +
+                  #geom_line(aes(y = p84sd), colour = cols1[2], linetype = "dashed")+
+                  geom_line(aes(y = sd), colour = 'skyblue4', size = 0.25)+
+                  geom_ribbon(aes(x=Data, ymax=sd, ymin=p16sd), fill= cols1[1], alpha=.3) +
+                  geom_ribbon(aes(x=Data, ymax=p84sd, ymin=sd), fill= cols1[1], alpha=.3) +
+                  xlab("Data") + ylab("Desvio Padrão") + ggtitle("Volatilidade na equação do Swap (IC de 16 a 64)") +
+                  scale_y_continuous(breaks = number_ticks(10)) +
+                  scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+                  #geom_hline(yintercept = 0, size=0.5)+
+                  mytheme_baixo2
+
+df2 <- data.frame(Data2, x22)
+names(df2) <- c("Data", "p5", "p25", "media", "p75", "p95")
+ 
+graph_sd_swap2 <- ggplot(data = df2, aes(Data,media)) +
+            #geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            #geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
+            #geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
+            #geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = media), size = 0.25)+
+            geom_ribbon(aes(x=Data, ymax=p25, ymin=p5), fill="skyblue3", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=media, ymin=p25), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
+            xlab("Data") + ylab("Desvio Padrão") + ggtitle("Volatilidade na equação do Swap") +
+            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+            #geom_hline(yintercept = 0, size=0.5)+
+            mytheme_baixo2
 ```
 
-```{r}
+Coeficiente (da própria variável defasada) e desvio padrão do resíduo, usando a média e os quantis 16 e 84 (os mesmos do primiceri) - primeira coluna - e mesmo gráfico, porém com o intervalo entre o 5 e 95 (área azul) quantis e 25 e 75 quantis (área cinza) - segunda coluna. Também coloquei um gráfico do coeficiente com a escala vertical incluindo o zero - terceira coluna - para dar comparabilidade:
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+grid.arrange(graph_beta_swap, graph_beta_swap2, graph_beta_swap_alt, graph_sd_swap, graph_sd_swap2,  ncol = 3, nrow = 2)
+```
+
+### PIB
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
 # Gráfico do desvio padrão do resíduo do pib
 x3 <- t(apply(sqrt(sd_pib), 2, stat.helper))
 x3betapib <- t(apply(beta_pib, 2, stat.helper))
 
-desc_betapib <- summary(mcmc_beta_pib)
-desc_sdpib   <- summary(mcmc_sd_pib)
+x32 <- t(apply(sqrt(sd_pib), 2, stat.helper2))
+x3betapib2 <- t(apply(beta_pib, 2, stat.helper2))
 
-##pdf(file = "C:\\Users\\aisha\\Documents\\Var da Aisha\\Figuras\\Coeficientes\\Fig_COEF-pib2.pdf", width = 6, height = 3)
-old.par <- par(mfrow=c(1,2), mar=c(2,2,0.5,0.5))  # direita, baixo, cima, esquerda
-matplot2(x = xax, y = x3betapib, ylim = c(min(desc_betapib$quantiles[,1]), max(desc_betapib$quantiles[,5])), col = cols1, main = "", xlab = "Tempo")
-matplot2(x = xax, y = x3, ylim = c(sqrt(min(desc_sdpib$quantiles[,1])), sqrt(max(desc_sdpib$quantiles[,5]))), col = cols1, main = "", xlab = "Tempo")
-par(old.par) # resets par()
-##dev.off()
+# Novo Gráfico - coeficientes
+df <- data.frame(Data2, x3betapib, x3)
+names(df) <- c("Data", "p16beta", "beta", "p84beta", "p16sd", "sd", "p84sd")
 
-#rm(desc_betapib, desc_sdpib)
+graph_beta_pib <- ggplot(data = df, aes(Data,beta)) +
+                  geom_line(aes(y = p16beta), colour = cols1[2], linetype = "dashed") +
+                  geom_line(aes(y = p84beta), colour = cols1[2], linetype = "dashed")+
+                  geom_line(aes(y = beta), colour = 'skyblue4', size = 0.25)+
+                  geom_ribbon(aes(x=Data, ymax=beta, ymin=p16beta), fill= cols1[1], alpha=.3) +
+                  geom_ribbon(aes(x=Data, ymax=p84beta, ymin=beta), fill= cols1[1], alpha=.3) +
+                  xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do PIB defasado em sua própria equação (IC de 16 a 64)") +
+                  scale_y_continuous(breaks = number_ticks(10)) +
+                  scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+                  #geom_hline(yintercept = 0, size=0.5)+
+                  mytheme_baixo2
+
+graph_beta_pib_alt <- ggplot(data = df, aes(Data,beta)) +
+                  geom_line(aes(y = p16beta), colour = cols1[2], linetype = "dashed") +
+                  geom_line(aes(y = p84beta), colour = cols1[2], linetype = "dashed")+
+                  geom_line(aes(y = beta), colour = 'skyblue4', size = 0.25)+
+                  geom_ribbon(aes(x=Data, ymax=beta, ymin=p16beta), fill= cols1[1], alpha=.3) +
+                  geom_ribbon(aes(x=Data, ymax=p84beta, ymin=beta), fill= cols1[1], alpha=.3) +
+                  xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do PIB defasado em sua própria equação (IC de 16 a 64)") +
+                  scale_y_continuous(breaks = number_ticks(10)) +
+                  scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+                  geom_hline(yintercept = 0, size=0.5)+
+                  mytheme_baixo2
+
+df2 <- data.frame(Data2, x3betapib2)
+names(df2) <- c("Data", "p5", "p25", "media", "p75", "p95")
+ 
+graph_beta_pib2 <- ggplot(data = df2, aes(Data,media)) +
+            geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = media), size = 0.25)+
+            geom_ribbon(aes(x=Data, ymax=p25, ymin=p5), fill="skyblue3", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=media, ymin=p25), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
+            xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do PIB defasado em sua própria equação") +
+            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+            #geom_hline(yintercept = 0, size=0.5)+
+            mytheme_baixo2
+
+# Novo Gráfico - volatilidade
+graph_sd_pib <- ggplot(data = df, aes(Data,sd)) +
+                  #geom_line(aes(y = p16sd), colour = cols1[2], linetype = "dashed") +
+                  #geom_line(aes(y = p84sd), colour = cols1[2], linetype = "dashed")+
+                  geom_line(aes(y = sd), colour = 'skyblue4', size = 0.25)+
+                  geom_ribbon(aes(x=Data, ymax=sd, ymin=p16sd), fill= cols1[1], alpha=.3) +
+                  geom_ribbon(aes(x=Data, ymax=p84sd, ymin=sd), fill= cols1[1], alpha=.3) +
+                  xlab("Data") + ylab("Desvio Padrão") + ggtitle("Volatilidade na equação do PIB (IC de 16 a 64)") +
+                  scale_y_continuous(breaks = number_ticks(10)) +
+                  scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+                  #geom_hline(yintercept = 0, size=0.5)+
+                  mytheme_baixo2
+
+df2 <- data.frame(Data2, x32)
+names(df2) <- c("Data", "p5", "p25", "media", "p75", "p95")
+ 
+graph_sd_pib2 <- ggplot(data = df2, aes(Data,media)) +
+            #geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            #geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
+            #geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
+            #geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = media), size = 0.25)+
+            geom_ribbon(aes(x=Data, ymax=p25, ymin=p5), fill="skyblue3", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=media, ymin=p25), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
+            xlab("Data") + ylab("Desvio Padrão") + ggtitle("Volatilidade na equação do PIB") +
+            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+            #geom_hline(yintercept = 0, size=0.5)+
+            mytheme_baixo2
 ```
 
-```{r}
+Coeficiente (da própria variável defasada) e desvio padrão do resíduo, usando a média e os quantis 16 e 84 (os mesmos do primiceri) - primeira coluna - e mesmo gráfico, porém com o intervalo entre o 5 e 95 (área azul) quantis e 25 e 75 quantis (área cinza) - segunda coluna. Também coloquei um gráfico do coeficiente com a escala vertical incluindo o zero - terceira coluna - para dar comparabilidade:
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+grid.arrange(graph_beta_pib, graph_beta_pib2, graph_beta_pib_alt, graph_sd_pib, graph_sd_pib2,  ncol = 3, nrow = 2)
+```
+
+### Taxa de Câmbio
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
 # Gráfico do desvio padrão do resíduo do cambio
 x4 <- t(apply(sqrt(sd_cambio), 2, stat.helper))
 x4betacambio <- t(apply(beta_cambio, 2, stat.helper))
 
-desc_betacambio <- summary(mcmc_beta_cambio)
-desc_sdcambio   <- summary(mcmc_sd_cambio)
+x42 <- t(apply(sqrt(sd_cambio), 2, stat.helper2))
+x4betacambio2 <- t(apply(beta_cambio, 2, stat.helper2))
 
-##pdf(file = "C:\\Users\\aisha\\Documents\\Var da Aisha\\Figuras\\Coeficientes\\Fig_COEF-cambio.pdf", width = 6, height = 3)
-old.par <- par(mfrow=c(1,2), mar=c(2,2,0.5,0.5))  # direita, baixo, cima, esquerda
-matplot2(x = xax, y = x4betacambio, ylim = c(min(desc_betacambio$quantiles[,1]), max(desc_betacambio$quantiles[,5])), col = cols1, main = "", xlab = "Tempo")
-matplot2(x = xax, y = x4, ylim = c(sqrt(min(desc_sdcambio$quantiles[,1])), sqrt(max(desc_sdcambio$quantiles[,5]))), col = cols1, main = "", xlab = "Tempo")
-par(old.par) # resets par()
-##dev.off()
+# Novo Gráfico - coeficientes
+df <- data.frame(Data2, x4betacambio, x4)
+names(df) <- c("Data", "p16beta", "beta", "p84beta", "p16sd", "sd", "p84sd")
 
-#rm(desc_betacambio, desc_sdcambio)
+graph_beta_cambio <- ggplot(data = df, aes(Data,beta)) +
+                  geom_line(aes(y = p16beta), colour = cols1[2], linetype = "dashed") +
+                  geom_line(aes(y = p84beta), colour = cols1[2], linetype = "dashed")+
+                  geom_line(aes(y = beta), colour = 'skyblue4', size = 0.25)+
+                  geom_ribbon(aes(x=Data, ymax=beta, ymin=p16beta), fill= cols1[1], alpha=.3) +
+                  geom_ribbon(aes(x=Data, ymax=p84beta, ymin=beta), fill= cols1[1], alpha=.3) +
+                  xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do Índice da Tx. de Câmbio defasado em sua própria equação (IC de 16 a 64)") +
+                  scale_y_continuous(breaks = number_ticks(10)) +
+                  scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+                  #geom_hline(yintercept = 0, size=0.5)+
+                  mytheme_baixo2
+
+graph_beta_cambio_alt <- ggplot(data = df, aes(Data,beta)) +
+                  geom_line(aes(y = p16beta), colour = cols1[2], linetype = "dashed") +
+                  geom_line(aes(y = p84beta), colour = cols1[2], linetype = "dashed")+
+                  geom_line(aes(y = beta), colour = 'skyblue4', size = 0.25)+
+                  geom_ribbon(aes(x=Data, ymax=beta, ymin=p16beta), fill= cols1[1], alpha=.3) +
+                  geom_ribbon(aes(x=Data, ymax=p84beta, ymin=beta), fill= cols1[1], alpha=.3) +
+                  xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do Índice da Tx. de Câmbio defasado em sua própria equação (IC de 16 a 64)") +
+                  scale_y_continuous(breaks = number_ticks(10)) +
+                  scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+                  geom_hline(yintercept = 0, size=0.5)+
+                  mytheme_baixo2
+
+df2 <- data.frame(Data2, x4betacambio2)
+names(df2) <- c("Data", "p5", "p25", "media", "p75", "p95")
+ 
+graph_beta_cambio2 <- ggplot(data = df2, aes(Data,media)) +
+            geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = media), size = 0.25)+
+            geom_ribbon(aes(x=Data, ymax=p25, ymin=p5), fill="skyblue3", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=media, ymin=p25), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
+            xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do Índice da Tx. de Câmbio defasado em sua própria equação") +
+            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+            #geom_hline(yintercept = 0, size=0.5)+
+            mytheme_baixo2
+
+# Novo Gráfico - volatilidade
+graph_sd_cambio <- ggplot(data = df, aes(Data,sd)) +
+                  #geom_line(aes(y = p16sd), colour = cols1[2], linetype = "dashed") +
+                  #geom_line(aes(y = p84sd), colour = cols1[2], linetype = "dashed")+
+                  geom_line(aes(y = sd), colour = 'skyblue4', size = 0.25)+
+                  geom_ribbon(aes(x=Data, ymax=sd, ymin=p16sd), fill= cols1[1], alpha=.3) +
+                  geom_ribbon(aes(x=Data, ymax=p84sd, ymin=sd), fill= cols1[1], alpha=.3) +
+                  xlab("Data") + ylab("Desvio Padrão") + ggtitle("Volatilidade na equação do Índice da Tx. de Câmbio (IC de 16 a 64)") +
+                  scale_y_continuous(breaks = number_ticks(10)) +
+                  scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+                  #geom_hline(yintercept = 0, size=0.5)+
+                  mytheme_baixo2
+
+df2 <- data.frame(Data2, x42)
+names(df2) <- c("Data", "p5", "p25", "media", "p75", "p95")
+ 
+graph_sd_cambio2 <- ggplot(data = df2, aes(Data,media)) +
+            #geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            #geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
+            #geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
+            #geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = media), size = 0.25)+
+            geom_ribbon(aes(x=Data, ymax=p25, ymin=p5), fill="skyblue3", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=media, ymin=p25), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
+            xlab("Data") + ylab("Desvio Padrão") + ggtitle("Volatilidade na equação do Índice da Tx. de Câmbio") +
+            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+            #geom_hline(yintercept = 0, size=0.5)+
+            mytheme_baixo2
 ```
 
-```{r}
+Coeficiente (da própria variável defasada) e desvio padrão do resíduo, usando a média e os quantis 16 e 84 (os mesmos do primiceri) - primeira coluna - e mesmo gráfico, porém com o intervalo entre o 5 e 95 (área azul) quantis e 25 e 75 quantis (área cinza) - segunda coluna. Também coloquei um gráfico do coeficiente com a escala vertical incluindo o zero - terceira coluna - para dar comparabilidade:
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+grid.arrange(graph_beta_cambio, graph_beta_cambio2, graph_beta_cambio_alt, graph_sd_cambio, graph_sd_cambio2,  ncol = 3, nrow = 2)
+```
+
+### IPCA
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
 # Gráfico do desvio padrão do resíduo do ipca
 x5 <- t(apply(sqrt(sd_ipca), 2, stat.helper))
 x5betaipca <- t(apply(beta_ipca, 2, stat.helper))
 
-desc_betaipca <- summary(mcmc_beta_ipca)
-desc_sdipca   <- summary(mcmc_sd_ipca)
+x52 <- t(apply(sqrt(sd_ipca), 2, stat.helper2))
+x5betaipca2 <- t(apply(beta_ipca, 2, stat.helper2))
 
-##pdf(file = "C:\\Users\\aisha\\Documents\\Var da Aisha\\Figuras\\Coeficientes\\Fig_COEF-ipca.pdf", width = 6, height = 3)
-old.par <- par(mfrow=c(1,2), mar=c(2,2,0.5,0.5))  # direita, baixo, cima, esquerda
-matplot2(x = xax, y = x5betaipca, ylim = c(min(desc_betaipca$quantiles[,1]), max(desc_betaipca$quantiles[,5])), col = cols1, main = "", xlab = "Tempo")
-matplot2(x = xax, y = x5, ylim = c(sqrt(min(desc_sdipca$quantiles[,1])), sqrt(max(desc_sdipca$quantiles[,5]))), col = cols1, main = "", xlab = "Tempo")
-par(old.par)
-##dev.off()
+# Novo Gráfico - coeficientes
+df <- data.frame(Data2, x5betaipca, x5)
+names(df) <- c("Data", "p16beta", "beta", "p84beta", "p16sd", "sd", "p84sd")
 
-#rm(desc_betaipca, desc_sdipca)
+graph_beta_ipca <- ggplot(data = df, aes(Data,beta)) +
+                  geom_line(aes(y = p16beta), colour = cols1[2], linetype = "dashed") +
+                  geom_line(aes(y = p84beta), colour = cols1[2], linetype = "dashed")+
+                  geom_line(aes(y = beta), colour = 'skyblue4', size = 0.25)+
+                  geom_ribbon(aes(x=Data, ymax=beta, ymin=p16beta), fill= cols1[1], alpha=.3) +
+                  geom_ribbon(aes(x=Data, ymax=p84beta, ymin=beta), fill= cols1[1], alpha=.3) +
+                  xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do IPCA defasado em sua própria equação (IC de 16 a 64)") +
+                  scale_y_continuous(breaks = number_ticks(10)) +
+                  scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+                  #geom_hline(yintercept = 0, size=0.5)+
+                  mytheme_baixo2
+
+graph_beta_ipca_alt <- ggplot(data = df, aes(Data,beta)) +
+                  geom_line(aes(y = p16beta), colour = cols1[2], linetype = "dashed") +
+                  geom_line(aes(y = p84beta), colour = cols1[2], linetype = "dashed")+
+                  geom_line(aes(y = beta), colour = 'skyblue4', size = 0.25)+
+                  geom_ribbon(aes(x=Data, ymax=beta, ymin=p16beta), fill= cols1[1], alpha=.3) +
+                  geom_ribbon(aes(x=Data, ymax=p84beta, ymin=beta), fill= cols1[1], alpha=.3) +
+                  xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do IPCA defasado em sua própria equação (IC de 16 a 64)") +
+                  scale_y_continuous(breaks = number_ticks(10)) +
+                  scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+                  geom_hline(yintercept = 0, size=0.5)+
+                  mytheme_baixo2
+
+df2 <- data.frame(Data2, x5betaipca2)
+names(df2) <- c("Data", "p5", "p25", "media", "p75", "p95")
+ 
+graph_beta_ipca2 <- ggplot(data = df2, aes(Data,media)) +
+            geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = media), size = 0.25)+
+            geom_ribbon(aes(x=Data, ymax=p25, ymin=p5), fill="skyblue3", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=media, ymin=p25), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
+            xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do IPCA defasado em sua própria equação") +
+            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+            #geom_hline(yintercept = 0, size=0.5)+
+            mytheme_baixo2
+
+# Novo Gráfico - volatilidade
+graph_sd_ipca <- ggplot(data = df, aes(Data,sd)) +
+                  #geom_line(aes(y = p16sd), colour = cols1[2], linetype = "dashed") +
+                  #geom_line(aes(y = p84sd), colour = cols1[2], linetype = "dashed")+
+                  geom_line(aes(y = sd), colour = 'skyblue4', size = 0.25)+
+                  geom_ribbon(aes(x=Data, ymax=sd, ymin=p16sd), fill= cols1[1], alpha=.3) +
+                  geom_ribbon(aes(x=Data, ymax=p84sd, ymin=sd), fill= cols1[1], alpha=.3) +
+                  xlab("Data") + ylab("Desvio Padrão") + ggtitle("Volatilidade na equação do IPCA (IC de 16 a 64)") +
+                  scale_y_continuous(breaks = number_ticks(10)) +
+                  scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+                  #geom_hline(yintercept = 0, size=0.5)+
+                  mytheme_baixo2
+
+df2 <- data.frame(Data2, x52)
+names(df2) <- c("Data", "p5", "p25", "media", "p75", "p95")
+ 
+graph_sd_ipca2 <- ggplot(data = df2, aes(Data,media)) +
+            #geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            #geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
+            #geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
+            #geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = media), size = 0.25)+
+            geom_ribbon(aes(x=Data, ymax=p25, ymin=p5), fill="skyblue3", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=media, ymin=p25), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
+            xlab("Data") + ylab("Desvio Padrão") + ggtitle("Volatilidade na equação do IPCA") +
+            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+            #geom_hline(yintercept = 0, size=0.5)+
+            mytheme_baixo2
 ```
+
+Coeficiente (da própria variável defasada) e desvio padrão do resíduo, usando a média e os quantis 16 e 84 (os mesmos do primiceri) - primeira coluna - e mesmo gráfico, porém com o intervalo entre o 5 e 95 (área azul) quantis e 25 e 75 quantis (área cinza) - segunda coluna. Também coloquei um gráfico do coeficiente com a escala vertical incluindo o zero - terceira coluna - para dar comparabilidade:
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+grid.arrange(graph_beta_ipca, graph_beta_ipca2, graph_beta_ipca_alt, graph_sd_ipca, graph_sd_ipca2,  ncol = 3, nrow = 2)
+```
+
+### Plotando as variáveis todas juntas
+
+Primeiro, plotando os gráficos com o intervalo do 16o ao 84o quantil (como feito no Primiceri e como eu fiz no trabalho de Macro2:
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+blank <- grid.rect(gp=gpar(col="white"))
+
+pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Coef\\Fig-Coef1.pdf", width = 6, height = 8)
+grid.arrange(graph_beta_ct, graph_beta_swap, graph_sd_ct, graph_sd_swap, 
+             graph_beta_pib, graph_beta_cambio, graph_sd_pib, graph_sd_cambio,
+             graph_beta_ipca, blank,  graph_sd_ipca, blank,
+             ncol = 2, nrow = 6)
+dev.off()
+```
+
+Mas o que acontece se incluímos o zero no eixo vertical dos coeficientes?
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Coef\\Fig-Coef2.pdf", width = 6, height = 8)
+grid.arrange(graph_beta_ct_alt, graph_beta_swap_alt, graph_sd_ct, graph_sd_swap, 
+             graph_beta_pib_alt, graph_beta_cambio_alt, graph_sd_pib, graph_sd_cambio,
+             graph_beta_ipca_alt, blank,  graph_sd_ipca, blank,
+             ncol = 2, nrow = 6)
+dev.off()
+```
+
+Agora vamos repetir gráfico mas fazendo as bandas do quantil 5 a 95 (em azul) e 25 a 75 (em cinza) - sem forçar o zero no eixo dos coeficientes:
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Coef\\Fig-Coef3.pdf", width = 6, height = 8)
+grid.arrange(graph_beta_ct2, graph_beta_swap2, graph_sd_ct2, graph_sd_swap2, 
+             graph_beta_pib2, graph_beta_cambio2, graph_sd_pib2, graph_sd_cambio2,
+             graph_beta_ipca2, blank,  graph_sd_ipca2, blank,
+             ncol = 2, nrow = 6)
+dev.off()
+```
+
+
+### Gráfico dos coeficientes das outras variáveis defasadas na equação da razão capital-trabalho
 
 ```{r}
 # Gráfico dos coeficientes das outras variáveis defasadas na equação da razão capital trabalho
@@ -5927,23 +5807,289 @@ x6beta_pib_ct     <- t(apply(beta_pib_ct, 2, stat.helper))
 x6beta_cambio_ct  <- t(apply(beta_cambio_ct, 2, stat.helper))
 x6beta_ipca_ct    <- t(apply(beta_ipca_ct, 2, stat.helper))
 
-desc_beta_swap_ct   <- summary(mcmc_beta_swap_ct)
-desc_beta_pib_ct    <- summary(mcmc_beta_pib_ct)
-desc_beta_cambio_ct <- summary(mcmc_beta_cambio_ct)
-desc_beta_ipca_ct   <- summary(mcmc_beta_ipca_ct)
+# Novo Gráfico - coeficientes
+df <- data.frame(Data2, x6beta_swap_ct, x6beta_pib_ct, x6beta_cambio_ct, x6beta_ipca_ct)
+names(df) <- c("Data", "p16swap", "swap", "p84swap", 
+               "p16pib", "pib", "p84pib", 
+               "p16cambio", "cambio", "p84cambio",
+               "p16ipca", "ipca", "p84ipca")
 
-##pdf(file = "C:\\Users\\aisha\\Documents\\Var da Aisha\\Figuras\\Coeficientes\\Fig_COEF-def.pdf", width = 6, height = 3)
-old.par <- par(mfrow=c(2,2), mar=c(2,2,2,0.8), cex.lab = 0.5)  # direita, baixo, cima, esquerda
-matplot2(x = xax, y = x6beta_swap_ct, ylim = c(min(desc_beta_swap_ct$quantiles[,1]), max(desc_beta_swap_ct$quantiles[,5])), col = cols1, main = "Swap", xlab = "Tempo")
-matplot2(x = xax, y = x6beta_pib_ct, ylim = c(min(desc_beta_pib_ct$quantiles[,1]), max(desc_beta_pib_ct$quantiles[,5])), col = cols1, main = "PIB", xlab = "Tempo")
-matplot2(x = xax, y = x6beta_cambio_ct, ylim = c(min(desc_beta_cambio_ct$quantiles[,1]), max(desc_beta_cambio_ct$quantiles[,5])), col = cols1, main = "Câmbio", xlab = "Tempo")
-matplot2(x = xax, y = x6beta_ipca_ct, ylim = c(min(desc_beta_ipca_ct$quantiles[,1]), max(desc_beta_ipca_ct$quantiles[,5])), col = cols1, main = "IPCA", xlab = "Tempo")
-par(old.par)
-##dev.off()
+graph_beta_swap_ct <- ggplot(data = df, aes(Data,swap)) +
+                  geom_line(aes(y = p16swap), colour = cols1[2], linetype = "dashed") +
+                  geom_line(aes(y = p84swap), colour = cols1[2], linetype = "dashed")+
+                  geom_line(aes(y = swap), colour = 'skyblue4', size = 0.25)+
+                  geom_ribbon(aes(x=Data, ymax=swap, ymin=p16swap), fill= cols1[1], alpha=.3) +
+                  geom_ribbon(aes(x=Data, ymax=p84swap, ymin=swap), fill= cols1[1], alpha=.3) +
+                  xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do Swap defasado na equação da Razão Capital-Trabalho (IC de 16 a 64)") +
+                  scale_y_continuous(breaks = number_ticks(10)) +
+                  scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+                  #geom_hline(yintercept = 0, size=0.5)+
+                  mytheme_baixo2
 
-#rm(desc_beta_swap_ct, desc_beta_pib_ct, desc_beta_cambio_ct, desc_beta_ipca_ct)
+graph_beta_swap_ct_alt <- ggplot(data = df, aes(Data,swap)) +
+                  geom_line(aes(y = p16swap), colour = cols1[2], linetype = "dashed") +
+                  geom_line(aes(y = p84swap), colour = cols1[2], linetype = "dashed")+
+                  geom_line(aes(y = swap), colour = 'skyblue4', size = 0.25)+
+                  geom_ribbon(aes(x=Data, ymax=swap, ymin=p16swap), fill= cols1[1], alpha=.3) +
+                  geom_ribbon(aes(x=Data, ymax=p84swap, ymin=swap), fill= cols1[1], alpha=.3) +
+                  xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do Swap defasado na equação da Razão Capital-Trabalho (IC de 16 a 64)") +
+                  scale_y_continuous(breaks = number_ticks(10)) +
+                  scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+                  geom_hline(yintercept = 0, size=0.5)+
+                  mytheme_baixo2
+##
+graph_beta_pib_ct <- ggplot(data = df, aes(Data,pib)) +
+                  geom_line(aes(y = p16pib), colour = cols1[2], linetype = "dashed") +
+                  geom_line(aes(y = p84pib), colour = cols1[2], linetype = "dashed")+
+                  geom_line(aes(y = pib), colour = 'skyblue4', size = 0.25)+
+                  geom_ribbon(aes(x=Data, ymax=pib, ymin=p16pib), fill= cols1[1], alpha=.3) +
+                  geom_ribbon(aes(x=Data, ymax=p84pib, ymin=pib), fill= cols1[1], alpha=.3) +
+                  xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do PIB defasado na equação da Razão Capital-Trabalho (IC de 16 a 64)") +
+                  scale_y_continuous(breaks = number_ticks(10)) +
+                  scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+                  #geom_hline(yintercept = 0, size=0.5)+
+                  mytheme_baixo2
+
+graph_beta_pib_ct_alt <- ggplot(data = df, aes(Data,pib)) +
+                  geom_line(aes(y = p16pib), colour = cols1[2], linetype = "dashed") +
+                  geom_line(aes(y = p84pib), colour = cols1[2], linetype = "dashed")+
+                  geom_line(aes(y = pib), colour = 'skyblue4', size = 0.25)+
+                  geom_ribbon(aes(x=Data, ymax=pib, ymin=p16pib), fill= cols1[1], alpha=.3) +
+                  geom_ribbon(aes(x=Data, ymax=p84pib, ymin=pib), fill= cols1[1], alpha=.3) +
+                  xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do PIB defasado na equação da Razão Capital-Trabalho (IC de 16 a 64)") +
+                  scale_y_continuous(breaks = number_ticks(10)) +
+                  scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+                  geom_hline(yintercept = 0, size=0.5)+
+                  mytheme_baixo2
+##
+graph_beta_cambio_ct <- ggplot(data = df, aes(Data,cambio)) +
+                  geom_line(aes(y = p16cambio), colour = cols1[2], linetype = "dashed") +
+                  geom_line(aes(y = p84cambio), colour = cols1[2], linetype = "dashed")+
+                  geom_line(aes(y = cambio), colour = 'skyblue4', size = 0.25)+
+                  geom_ribbon(aes(x=Data, ymax=cambio, ymin=p16cambio), fill= cols1[1], alpha=.3) +
+                  geom_ribbon(aes(x=Data, ymax=p84cambio, ymin=cambio), fill= cols1[1], alpha=.3) +
+                  xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do Câmbio defasado na equação da Razão Capital-Trabalho (IC de 16 a 64)") +
+                  scale_y_continuous(breaks = number_ticks(10)) +
+                  scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+                  #geom_hline(yintercept = 0, size=0.5)+
+                  mytheme_baixo2
+
+graph_beta_cambio_ct_alt <- ggplot(data = df, aes(Data,swap)) +
+                  geom_line(aes(y = p16cambio), colour = cols1[2], linetype = "dashed") +
+                  geom_line(aes(y = p84cambio), colour = cols1[2], linetype = "dashed")+
+                  geom_line(aes(y = cambio), colour = 'skyblue4', size = 0.25)+
+                  geom_ribbon(aes(x=Data, ymax=cambio, ymin=p16cambio), fill= cols1[1], alpha=.3) +
+                  geom_ribbon(aes(x=Data, ymax=p84cambio, ymin=cambio), fill= cols1[1], alpha=.3) +
+                  xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do Câmbio defasado na equação da Razão Capital-Trabalho (IC de 16 a 64)") +
+                  scale_y_continuous(breaks = number_ticks(10)) +
+                  scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+                  geom_hline(yintercept = 0, size=0.5)+
+                  mytheme_baixo2
+##
+graph_beta_ipca_ct <- ggplot(data = df, aes(Data,ipca)) +
+                  geom_line(aes(y = p16ipca), colour = cols1[2], linetype = "dashed") +
+                  geom_line(aes(y = p84ipca), colour = cols1[2], linetype = "dashed")+
+                  geom_line(aes(y = ipca), colour = 'skyblue4', size = 0.25)+
+                  geom_ribbon(aes(x=Data, ymax=ipca, ymin=p16ipca), fill= cols1[1], alpha=.3) +
+                  geom_ribbon(aes(x=Data, ymax=p84ipca, ymin=ipca), fill= cols1[1], alpha=.3) +
+                  xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do IPCA defasado na equação da Razão Capital-Trabalho (IC de 16 a 64)") +
+                  scale_y_continuous(breaks = number_ticks(10)) +
+                  scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+                  #geom_hline(yintercept = 0, size=0.5)+
+                  mytheme_baixo2
+
+graph_beta_ipca_ct_alt <- ggplot(data = df, aes(Data,ipca)) +
+                  geom_line(aes(y = p16ipca), colour = cols1[2], linetype = "dashed") +
+                  geom_line(aes(y = p84ipca), colour = cols1[2], linetype = "dashed")+
+                  geom_line(aes(y = ipca), colour = 'skyblue4', size = 0.25)+
+                  geom_ribbon(aes(x=Data, ymax=ipca, ymin=p16ipca), fill= cols1[1], alpha=.3) +
+                  geom_ribbon(aes(x=Data, ymax=p84ipca, ymin=ipca), fill= cols1[1], alpha=.3) +
+                  xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do IPCA defasado na equação da Razão Capital-Trabalho (IC de 16 a 64)") +
+                  scale_y_continuous(breaks = number_ticks(10)) +
+                  scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+                  geom_hline(yintercept = 0, size=0.5)+
+                  mytheme_baixo2
+
+
+# Agora fazendo com os intervalos mais amplos
+x6beta_swap_ct2    <- t(apply(beta_swap_ct, 2, stat.helper2))
+x6beta_pib_ct2     <- t(apply(beta_pib_ct, 2, stat.helper2))
+x6beta_cambio_ct2  <- t(apply(beta_cambio_ct, 2, stat.helper2))
+x6beta_ipca_ct2    <- t(apply(beta_ipca_ct, 2, stat.helper2))
+
+
+df2 <- data.frame(Data2, x6beta_swap_ct2)
+names(df2) <- c("Data", "p5", "p25", "media", "p75", "p95")
+ 
+graph_beta_swap_ct2 <- ggplot(data = df2, aes(Data,media)) +
+            geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = media), size = 0.25)+
+            geom_ribbon(aes(x=Data, ymax=p25, ymin=p5), fill="skyblue3", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=media, ymin=p25), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
+            xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do Swap na equação da Razão Capital-Trabalho") +
+            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+            #geom_hline(yintercept = 0, size=0.5)+
+            mytheme_baixo2
+
+graph_beta_swap_ct2_alt <- ggplot(data = df2, aes(Data,media)) +
+            geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = media), size = 0.25)+
+            geom_ribbon(aes(x=Data, ymax=p25, ymin=p5), fill="skyblue3", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=media, ymin=p25), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
+            xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do Swap na equação da Razão Capital-Trabalho") +
+            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+            geom_hline(yintercept = 0, size=0.5)+
+            mytheme_baixo2
+
+df2 <- data.frame(Data2, x6beta_pib_ct2)
+names(df2) <- c("Data", "p5", "p25", "media", "p75", "p95")
+ 
+graph_beta_pib_ct2 <- ggplot(data = df2, aes(Data,media)) +
+            geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = media), size = 0.25)+
+            geom_ribbon(aes(x=Data, ymax=p25, ymin=p5), fill="skyblue3", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=media, ymin=p25), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
+            xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do PIB na equação da Razão Capital-Trabalho") +
+            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+            #geom_hline(yintercept = 0, size=0.5)+
+            mytheme_baixo2
+
+graph_beta_pib_ct2_alt <- ggplot(data = df2, aes(Data,media)) +
+            geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = media), size = 0.25)+
+            geom_ribbon(aes(x=Data, ymax=p25, ymin=p5), fill="skyblue3", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=media, ymin=p25), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
+            xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do PIB na equação da Razão Capital-Trabalho") +
+            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+            geom_hline(yintercept = 0, size=0.5)+
+            mytheme_baixo2
+
+df2 <- data.frame(Data2, x6beta_cambio_ct2)
+names(df2) <- c("Data", "p5", "p25", "media", "p75", "p95")
+ 
+graph_beta_cambio_ct2 <- ggplot(data = df2, aes(Data,media)) +
+            geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = media), size = 0.25)+
+            geom_ribbon(aes(x=Data, ymax=p25, ymin=p5), fill="skyblue3", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=media, ymin=p25), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
+            xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do Câmbio na equação da Razão Capital-Trabalho") +
+            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+            #geom_hline(yintercept = 0, size=0.5)+
+            mytheme_baixo2
+
+graph_beta_cambio_ct2_alt <- ggplot(data = df2, aes(Data,media)) +
+            geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = media), size = 0.25)+
+            geom_ribbon(aes(x=Data, ymax=p25, ymin=p5), fill="skyblue3", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=media, ymin=p25), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
+            xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do Câmbio na equação da Razão Capital-Trabalho") +
+            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+            geom_hline(yintercept = 0, size=0.5)+
+            mytheme_baixo2
+
+df2 <- data.frame(Data2, x6beta_ipca_ct2)
+names(df2) <- c("Data", "p5", "p25", "media", "p75", "p95")
+ 
+graph_beta_ipca_ct2 <- ggplot(data = df2, aes(Data,media)) +
+            geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = media), size = 0.25)+
+            geom_ribbon(aes(x=Data, ymax=p25, ymin=p5), fill="skyblue3", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=media, ymin=p25), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
+            xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do IPCA na equação da Razão Capital-Trabalho") +
+            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+            #geom_hline(yintercept = 0, size=0.5)+
+            mytheme_baixo2
+
+graph_beta_ipca_ct2_alt <- ggplot(data = df2, aes(Data,media)) +
+            geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = media), size = 0.25)+
+            geom_ribbon(aes(x=Data, ymax=p25, ymin=p5), fill="skyblue3", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=media, ymin=p25), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=Data, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
+            xlab("Data") + ylab("Coeficiente") + ggtitle("Coeficiente do IPCA na equação da Razão Capital-Trabalho") +
+            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_x_date(breaks = Data2[datemarks], name = "Data", labels = date_format("%Y"))+
+            geom_hline(yintercept = 0, size=0.5)+
+            mytheme_baixo2
 ```
 
+Primeiro os gráficos com os intervalos de 16 a 84% sem forçar o zero no eixo y:
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Coef\\Fig-Coef_ct1.pdf", width = 6, height = 8)
+grid.arrange(graph_beta_swap_ct, graph_beta_pib_ct, graph_beta_cambio_ct, graph_beta_ipca_ct, ncol = 2, nrow = 2)
+dev.off()
+```
+
+Agora o mesmo gráfico mas forçando o zero a aparecer:
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Coef\\Fig-Coef_ct2.pdf", width = 6, height = 8)
+grid.arrange(graph_beta_swap_ct_alt, graph_beta_pib_ct_alt, graph_beta_cambio_ct_alt, graph_beta_ipca_ct_alt, ncol = 2, nrow = 2)
+dev.off()
+```
+
+E o mesmo gráfico mas com os quantis de 5 a 95 e 25 a 75:
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Coef\\Fig-Coef_ct3.pdf", width = 6, height = 8)
+grid.arrange(graph_beta_swap_ct2, graph_beta_pib_ct2, graph_beta_cambio_ct2, graph_beta_ipca_ct2, ncol = 2, nrow = 2)
+dev.off()
+```
+
+Repete o mesmo de antes, mas incluindo zero no eixo y:
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
+pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Coef\\Fig-Coef_ct4.pdf", width = 6, height = 8)
+grid.arrange(graph_beta_swap_ct2_alt, graph_beta_pib_ct2_alt, graph_beta_cambio_ct2_alt, graph_beta_ipca_ct2_alt, ncol = 2, nrow = 2)
+dev.off()
+```
 
 ## Diagnóstico
 
@@ -5957,9 +6103,9 @@ Um dos diagnósticos é plotar a cadeia (usando `plot(mcmc_object)`). Ele retorna 
 
 Outro diagnóstico das médias envolve fazer o gráfico da média usando uma janela móvel para ver se a posteriori cai em alguma região e fica empacada.
 
-Como eu tenho muitos instantes de tempo (e portanto uma quantidade enorme de betas e de sigmas), eu selecionei arbitrariamente 15 betas (que é a divisão inteira de `t` por 10 - então estou plotando 10% dos parâmetros para cada $y$).
+Como eu tenho muitos instantes de tempo (e portanto uma quantidade enorme de betas e de sigmas), eu selecionei arbitrariamente 15 betas (que é a divisão inteira de `t` por 10 - então estou plotando 10% dos parâmetros para cada $y$). Esses gráficos eu resolvi deixar de fora do artigo.
 
-```{r, warning = FALSE, message = FALSE}
+```{r, warning = FALSE, message = FALSE, echo = FALSE}
 #sequencia <-  seq(10, dim(beta_ct)[2], 20)[-1]
 
 sequencia <- head(seq(10, dim(beta_ct)[2], 20),-1)
@@ -6681,9 +6827,9 @@ i
 
 ```
 
-Agora tem o `cumuplot()` que faz o gráfico dos quantis da cadeia (de forma acumulada). O default é 0.025, 0.5, 0.975. **Se eu tiver tempo depois, vou mexer no layout desses gráficos pois são feiosos demais.**
+Agora tem o `cumuplot()` que faz o gráfico dos quantis da cadeia (de forma acumulada). O default é 0.025, 0.5, 0.975. **Se eu tiver tempo depois, vou mexer no layout desses gráficos pois são feiosos demais.** Também deixei de fora.
 
-```{r}
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
 #####################################
 # Para a razão capital trabalho
 #####################################
@@ -6922,9 +7068,9 @@ for (i in sequencia){
 
 ```
 
-Por fim, tem o diagnóstico do Geweke, que calcula uma estatística com distribuição normal e que compara o início e o final da distribuição. De novo vou plotar só uma parte para não ficar muito grande
+Por fim, tem o diagnóstico do Geweke, que calcula uma estatística com distribuição normal e que compara o início e o final da distribuição. De novo vou plotar só uma parte para não ficar muito grande. E deixei de fora do artigo
 
-```{r}
+```{r, warning = FALSE, message = FALSE, echo = FALSE}
 frac1. <- .3
 frac2. <- .3
 
@@ -6994,9 +7140,9 @@ par(old.par)
 
 ### Diagnóstico da autocorrelação
 
-O bloco abaixo eu montei para entender melhor o que a `autocorr()` do pacote `coda` faz. No fim, vou ficar com a função de autocorrelação (não a parcial) pois ela avalia o efeito até o instante `j`.
+O bloco abaixo eu montei para entender melhor o que a `autocorr()` do pacote `coda` faz. No fim, vou ficar com a função de autocorrelação (não a parcial) pois ela avalia o efeito até o instante `j`. (o bloco agora está oculto)
 
-```{r, eval = FALSE}
+```{r, eval = FALSE, echo = FALSE, message=FALSE, warning = FALSE}
 # Tentando descobrir o que as coisas são
 # Esse é o do coda, ele é o mais parecido com a acf, mas não chega a ser igual.
 autocorr(mcmc_sd_ct[,i], lags = c(20,100,1000))
@@ -7016,9 +7162,9 @@ c(Acf(mcmc_sd_ct[,1], lag.max = 20, plot = F, type = "partial")[20]$acf, Acf(mcm
 c(Pacf(mcmc_sd_ct[,1], lag.max = 20, plot = F)[20]$acf, Pacf(mcmc_sd_ct[,1], lag.max = 100, plot = F)[100]$acf, Pacf(mcmc_sd_ct[,1], lag.max = 1000, plot = F)[1000]$acf)
 ```
 
-Agora estou calculando a função te autocorrelação para depois fazer uns fancy graphs.
+Agora estou calculando a função te autocorrelação para depois fazer uns fancy graphs. O bloco do código está oculto.
 
-```{r}
+```{r, warning = FALSE, message = FALSE, echo = FALSE}
 autocorrelacao_beta_ct <- vector()
 autocorrelacao_beta_swap <- vector()
 autocorrelacao_beta_pib <- vector()
@@ -7049,7 +7195,7 @@ proc.time() - pm
 
 Agora vamos para os gráficos.... a ideia é fazer algo como o Primiceri tem no anexo B (figura 9 - topo), porém dividindo por variável do VAR.
 
-```{r}
+```{r, warning = FALSE, message = FALSE, echo = FALSE}
 # Montando os data frames
 
 #############################################
@@ -7268,30 +7414,25 @@ p5 <- ggplot(autocorrelacao_sd_ipca, aes(tempo, value, colour = variable)) +
         geom_line(alpha = 1, show.legend=F, aes(linetype = variable))+
         scale_y_continuous(name="IPCA", lim = c(minimo_sd,maximo_sd)) +
         scale_x_continuous(name = "Tempo", breaks = seq(0,tempo,10), expand = c(0,0)) +
-        theme_bw() +
+        theme_bw() + 
         scale_colour_brewer(palette="Set1")
         
 p5 <- p5 + theme(axis.text.x = element_text(angle=25, vjust = 2, size = 5, hjust = 1), axis.title.x = element_text(size = 6, vjust = 5), axis.title.y = element_text(size =6), legend.position="right", axis.text.y = element_text(size = 6), plot.margin = unit(c(0.009,0.08,0.0001,0.1), "cm")) # cima,direita, baixo, esquerda
 p5 <- p5 + labs(linetype = "Lags") # I couldn't fix the legend name properly, so why not?
 p5 <- p5 + labs(colour='Lags')
 
-#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Fig-corr.pdf", width = 12, height = 6)
+pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Fig-corr.pdf", width = 12, height = 6)
 ggarrange(p1a, p1, p2a, p2, p3a, p3, p4a, p4, p5a, p5, common.legend = TRUE, ncol = 2, nrow = 5)
-#dev.off()
-#################
-# grid.draw(rbind(ggplotGrob(p1), ggplotGrob(p2), ggplotGrob(p3), ggplotGrob(p4), ggplotGrob(p5), size = "first"))
-# grid.arrange(p1, p2, p3, p4, p5, ncol=1, nrow = 5) # This squish the graph with the legend
-
-# Estimar outroS 4 modelos guardando apenas as últimas 200 observações e fazer uma anova não paramétrica
+dev.off()
 ```
 
 ### Diagnóstico multivariado
 
 A estatística de Gelman-Rubin mede se há diferença significativa entre a variância dentro e entre diversas cadeias utilizando um fator de redução de escala. Aqui eu optei por simular duas cadeias e fazer a comparação entre elas. Em função da memória do computador eu utilizei um número menor de iterações salvas: ao invés de salvar todos os valores, armazenei apenas os 10.000 últimos valores (20%).
 
-```{r, message = FALSE, warning = FALSE}
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # Primeira coisa é limpar a memória
-#keep(capital_trabalho_final, swap, PIB2, cambio, ipca, pos_ct, pos_ipca, pos_cambio, pos_swap, pos_pib, sure = TRUE)
+#keep(capital_trabalho_final, swap, PIB2, cambio, ipca, pos_ct, pos_ipca, pos_cambio, pos_swap, pos_pib, sure = TRUE) 
 #rm(fit1) 
 # Junta o swap com a selic
 selic_trim <- ts(selic_final[1:44], start = c(1996, 01, 01), frequency = 12)
@@ -7302,11 +7443,7 @@ swap <- pmin(comb[,1], comb[,2], na.rm = TRUE)
 
 #Inflação - Produto - Juros - Câmbio - Desigualdade.
 var1 <- cbind(capital_trabalho_final*100, ipca, PIB*100, swap, cambio) # The bvar function does not allows data.frames
-#var2 <- cbind(capital_trabalho_final, swap, PIB2, cambio, ipca) # The bvar function does not allows data.frames
 names(var1) <- c("capital_trabalho", "ipca", "pib", "swap", "cambio")
-#names(var1) <- c("ipca", "pib", "swap", "cambio","capital_trabalho") # Ficou uma merda
-
-#var1 <- c(1,2,3,4,5)
 
 pos_ct     <- grep("capital_trabalho", names(var1))
 pos_swap   <- grep("swap", names(var1))
@@ -7320,7 +7457,7 @@ nburn.    <- 1000000 # Burn the first 350k replications
 nrep.     <- 100000 # Estimate another 100k times after burn in
 thinfac.  <- 4 # But keep only 1 in 4 estimates
 p.        <- 1 # Number of lags
-tau.      <- 48 # Number of observations to use as prior
+tau.      <- 48-p. # Number of observations to use as prior
 nf.       <- 1 # Number of forecast periods
 k_B.      <- 6 # Fator de inflação na priori
 k_A.      <- 4 # Fator de inflação na priori
@@ -7335,7 +7472,7 @@ pm <- proc.time()
 fit1 <- bvar.sv.tvp(var1, p=p., tau = tau., nburn = nburn., nrep = nrep., nf = nf., thinfac = thinfac.)
 #fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fita.rds")
 proc.time() - pm
-saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fita novo.rds")
+saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fita.rds")
 
 
 betas_ct     <- parameter.draws(fit1, type = "lag1", row = pos_ct, col = pos_ct)
@@ -7355,9 +7492,9 @@ mcmc_1 <- mcmc(cbind(betas_ct, betas_swap, betas_pib, betas_cambio, betas_ipca, 
 rm(fit1, betas_ct, betas_swap, betas_pib, betas_cambio, betas_ipca, sd_ct, sd_swap, sd_pib, sd_cambio, sd_ipca)
 
 set.seed(9696)
-#fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\fitb.rds")
+#fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fitb.rds")
 fit1 <- bvar.sv.tvp(var1, p=p., tau = tau., nburn = nburn., nrep = nrep., nf = nf., thinfac = thinfac.)
-saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fitb novo.rds")
+saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fitb.rds")
 
 betas_ct     <- parameter.draws(fit1, type = "lag1", row = pos_ct, col = pos_ct)
 betas_swap  <- parameter.draws(fit1, type = "lag1", row = pos_swap, col = pos_swap)
@@ -7377,13 +7514,13 @@ rm(fit1, betas_ct, betas_swap, betas_pib, betas_cambio, betas_ipca, sd_ct, sd_sw
 
 lista <- mcmc.list(mcmc_1, mcmc_2)
 diagnostico <- gelman.diag(lista)
-nrow(diagnostico$psrf) #2140 linhas
+tail(dignostico)
+#nrow(diagnostico$psrf) #2140 linhas
 
 df1 <- data.frame(seq(1, nrow(diagnostico$psrf), 1) , diagnostico$psrf[,1], diagnostico$psrf[,2])
 names(df1) <- c("parametro", "gelman", "upperic")
 
 df2 <- melt(df1, id.vars = "parametro")
-
 
 p1 <- ggplot(df1, aes(x = parametro, y = gelman))+
   geom_line()
@@ -7400,38 +7537,95 @@ p2 <- ggplot(data = df1, aes(parametro)) +
  theme_bw()+
  theme(axis.text.x = element_text(angle=30, hjust = 1, size = 7), axis.title.x = element_text(size = 7), axis.title.y = element_text(size = 7))
 
-#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig_brooks novo.pdf", width = 6, height = 3)
+pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig_brooks.pdf", width = 6, height = 3)
 p2
-#dev.off()
+dev.off()
 
 head(df2)
 #gelman.plot(lista)
 
 # Tentar descobrir como colocar label no gelman plot
+rm(fit1)
 ```
-
 
 # Previsão
 
-```{r}
-nf. <- 10
+Fiz previsão 1, 6, 12, e 24 passos à frente.
+
+
+## 1 passo à frente
+
+Posso usar o que eu já tinha estimado.
+
+## 6 passos à frente (1 semestre)
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+# Previsão
+nf. <- 6
 
 var1 <- cbind(capital_trabalho_final*100, ipca, PIB2*100, swap, cambio*100) # The bvar function does not allows data.frames
 names(var1) <- c("capital_trabalho", "ipca", "pib", "swap", "cambio")
+
 # Prepara um vetor com as últimas nf. observações para deixar de fora
 amostra_1 <- var1[(nrow(var1)-nf.+1):(nrow(var1)),] 
 var1      <- var1[1:(nrow(var1)-nf.),]
 
 set.seed(2747)
-#fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit10for.rds")
+#fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit6for.rds")
 fit1 <- bvar.sv.tvp(var1, p=p., tau = tau., nburn = nburn., nrep = nrep., nf = nf., thinfac = thinfac.)
-saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit10for.rds")
+saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit6for.rds")
 #rm(fit1)
+```
 
+## 12 passos à frente (1 ano)
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+rm(fit1)
+# Previsão
+nf. <- 12
+
+var1 <- cbind(capital_trabalho_final*100, ipca, PIB2*100, swap, cambio*100) # The bvar function does not allows data.frames
+names(var1) <- c("capital_trabalho", "ipca", "pib", "swap", "cambio")
+
+# Prepara um vetor com as últimas nf. observações para deixar de fora
+amostra_1 <- var1[(nrow(var1)-nf.+1):(nrow(var1)),] 
+var1      <- var1[1:(nrow(var1)-nf.),]
+
+set.seed(2747)
+#fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit6for.rds")
+fit1 <- bvar.sv.tvp(var1, p=p., tau = tau., nburn = nburn., nrep = nrep., nf = nf., thinfac = thinfac.)
+saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit12for.rds")
+#rm(fit1)
+```
+
+## 24 passos à frente (2 anos)
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+rm(fit1)
+# Previsão
+nf. <- 12
+
+var1 <- cbind(capital_trabalho_final*100, ipca, PIB2*100, swap, cambio*100) # The bvar function does not allows data.frames
+names(var1) <- c("capital_trabalho", "ipca", "pib", "swap", "cambio")
+
+# Prepara um vetor com as últimas nf. observações para deixar de fora
+amostra_1 <- var1[(nrow(var1)-nf.+1):(nrow(var1)),] 
+var1      <- var1[1:(nrow(var1)-nf.),]
+
+set.seed(2747)
+#fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit6for.rds")
+fit1 <- bvar.sv.tvp(var1, p=p., tau = tau., nburn = nburn., nrep = nrep., nf = nf., thinfac = thinfac.)
+saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit24for.rds")
+#rm(fit1)
+```
+
+Vou deixar isso aqui de lado por enquanto
+
+```{r, echo = FALSE, eval = FALSE}
 # Variável para fazer a previsão
 sel.var <- 1 # 1- Razão capital trabalho 2 - ipca 3 - pib 4 - swap 5 - cambio
 
-# Fita um outro var apenas para comparar, estimado por MQO
+# Ajusta um outro var apenas para comparar, estimado por MQO
 fit2.ols <- VAR(var1, p=1)
 fc.ols   <- predict(fit2.ols, n.ahead = nf.)[[1]][[sel.var]] 
 fc.ols.mean <- fc.ols[,1]
@@ -7471,21 +7665,5 @@ for (hh in c(1,nf.)){
   # Marcação do verdadeiro valor
   abline(v= amostra_1[hh,sel.var])
 }
-
-########################################
-#var1 <- cbind(capital_trabalho_final*100, ipca, PIB2*100, swap, cambio*100) # The bvar function does not allows data.frames
-#names(var1) <- c("capital_trabalho", "ipca", "pib", "swap", "cambio")
-#nf. <- 24
-# Prepara um vetor com as últimas nf. observações para deixar de fora
-#amostra_1 <- var1[(nrow(var1)-nf.+1):(nrow(var1)),]
-#var1      <- var1[1:(nrow(var1)-nf.),]
-
-#set.seed(1302)
-#fit1 <- readRDS("C:\\Users\\aisha\\Documents\\Var da Aisha\\Var7\\fit20-24.rds")
-#fit1 <- bvar.sv.tvp(var1, p=p., tau = tau., nburn = nburn., nrep = nrep., nf = nf., thinfac = thinfac.)
-#saveRDS(fit1, "C:\\Users\\aisha\\Documents\\Var da Aisha\\Var7\\fit20-24.rds")
-#rm(fit1)
-
-
 
 ```
