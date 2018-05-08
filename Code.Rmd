@@ -1073,9 +1073,9 @@ tamanho <- floor(1/thinfac.*nrep.)
 tempo <- nrow(var1)
 
 pm <- proc.time()
-fit1 <- bvar.sv.tvp(var1, p=p., tau = tau., nburn = nburn., nrep = nrep., thinfac = thinfac., nf = nf., k_B = k_B., k_A = k_A.)
-saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit.rds") 
-#fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit.rds") 
+#fit1 <- bvar.sv.tvp(var1, p=p., tau = tau., nburn = nburn., nrep = nrep., thinfac = thinfac., nf = nf., k_B = k_B., k_A = k_A.)
+#saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit.rds") 
+fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit.rds") 
 #rm(fit1, ira)
 proc.time() - pm
 ```
@@ -1212,7 +1212,8 @@ sigma_prmean <- priori$sigma_OLS
 #write.csv(sigma_prmean, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\sigma_prmean.csv")
 ```
 
-## Alguns gráficos
+
+# Funções impulso resposta
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE}
 ## Colocando as datas como strings
@@ -1230,7 +1231,6 @@ gp_ini <- d %m+% months(ini_xax)
 gp <- seq(year(gp_ini), year(tail(Data,1)), 1)
 ```
 
-### Funções impulso resposta
 
 Peguei a explicação daqui [daqui](https://github.com/FK83/bvarsv/blob/master/bvarsv_Nov2015_website.pdf):
 A FIR estima o impacto de um choque unitário em algum elemento de $\varepsilon_t$. Os elementos de $c_t$, $B_{j,t}$ e $A_t$ em (1) são mantidos fixos em seus valores em $t$, mas os elementos de $\Sigma_t$ são substituídos pela média de todos os períodos. Note que a ordem das variáveis importa e deve ser justificada por argumentos econômicos. As FIR contém os percentis 5, 25, 50, 75 e 95.
@@ -1383,9 +1383,9 @@ ira_swap_cambio <- ggplot(data = ira2, aes(lag,media)) +
             plot.title = element_text(size=6, vjust = -0.5),
             plot.margin = unit(c(0,1,1,0), "mm"))
 
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-Swap.pdf", width = 6, height = 6)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-Swap.pdf", width = 6, height = 6)
 grid.arrange(ira_swap_ct, ira_swap_ipca, ira_swap_pib, ira_swap_cambio, ncol=2, nrow = 2)
-dev.off()
+#dev.off()
 
 ```
 
@@ -1623,7 +1623,7 @@ ira_09 <- ggplot(data = ira2, aes(lag,media)) +
             geom_hline(yintercept = 0, size=0.5)+
             mytheme_baixo
  
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-Swap-CT.pdf", width = 6, height = 6)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-Swap-CT.pdf", width = 6, height = 6)
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
 #dev.off()
 ```
@@ -1859,9 +1859,9 @@ ira_09 <- ggplot(data = ira2, aes(lag,media)) +
             geom_hline(yintercept = 0, size=0.5)+
             mytheme_baixo
 
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-Swap-PIB.pdf", width = 6, height = 6)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-Swap-PIB.pdf", width = 6, height = 6)
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
-dev.off()
+#dev.off()
 
 #write.csv(ira$irf, "C:\\Users\\aisha\\Documents\\Var da Aisha\\fir_swap_pib.csv")
 ```
@@ -2100,9 +2100,9 @@ ira_09 <- ggplot(data = ira2, aes(lag,media)) +
             geom_hline(yintercept = 0, size=0.5)+
             mytheme_baixo
 
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-Swap-CAMBIO.pdf", width = 6, height = 6)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-Swap-CAMBIO.pdf", width = 6, height = 6)
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
-dev.off()
+#dev.off()
 
 #write.csv(ira$irf, "C:\\Users\\aisha\\Documents\\Var da Aisha\\fir_swap_cambio.csv")
 ```
@@ -2339,9 +2339,9 @@ ira_09 <- ggplot(data = ira2, aes(lag,media)) +
             geom_hline(yintercept = 0, size=0.5)+
             mytheme_baixo
 
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-Swap-IPCA.pdf", width = 6, height = 6)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-Swap-IPCA.pdf", width = 6, height = 6)
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
-dev.off()
+#dev.off()
 
 #write.csv(ira$irf, "C:\\Users\\aisha\\Documents\\Var da Aisha\\fir_swap_ipca.csv")
 
@@ -2582,9 +2582,9 @@ ira_09 <- ggplot(data = ira2, aes(lag,media)) +
             geom_hline(yintercept = 0, size=0.5)+
             mytheme_baixo
 
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-PIB-CT.pdf", width = 6, height = 6)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-PIB-CT.pdf", width = 6, height = 6)
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
-dev.off()
+#dev.off()
 
 #write.csv(ira$irf, "C:\\Users\\aisha\\Documents\\Var da Aisha\\fir_pib_ct.csv")
 ```
@@ -2822,9 +2822,9 @@ ira_09 <- ggplot(data = ira2, aes(lag,media)) +
             geom_hline(yintercept = 0, size=0.5)+
             mytheme_baixo
 
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-PIB-CAMBIO.pdf", width = 6, height = 6)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-PIB-CAMBIO.pdf", width = 6, height = 6)
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
-dev.off()
+#dev.off()
 
 ```
 
@@ -3060,9 +3060,9 @@ ira_09 <- ggplot(data = ira2, aes(lag,media)) +
             geom_hline(yintercept = 0, size=0.5)+
             mytheme_baixo
  
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-PIB-SWAP.pdf", width = 6, height = 6)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-PIB-SWAP.pdf", width = 6, height = 6)
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
-dev.off()
+#dev.off()
 ```
 
 ### No IPCA
@@ -3297,14 +3297,14 @@ ira_09 <- ggplot(data = ira2, aes(lag,media)) +
             geom_hline(yintercept = 0, size=0.5)+
             mytheme_baixo
  
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-PIB-IPCA.pdf", width = 6, height = 6)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-PIB-IPCA.pdf", width = 6, height = 6)
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
-dev.off()
+#dev.off()
 ```
 
 ## Choques na taxa de câmbio
 
-### Na razão capital-trabalho
+### Efeito do câmbio na razão capital-trabalho
 
 ```{r, echo = FALSE, message = FALSE}
 ################################################################
@@ -3536,14 +3536,14 @@ ira_09 <- ggplot(data = ira2, aes(lag,media)) +
             geom_hline(yintercept = 0, size=0.5)+
             mytheme_baixo
 
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-CAMBIO-CT.pdf", width = 6, height = 6)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-CAMBIO-CT.pdf", width = 6, height = 6)
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
-dev.off()
+#dev.off()
 
 #write.csv(ira$irf, "C:\\Users\\aisha\\Documents\\Var da Aisha\\fir_cambio_ct.csv")
 ```
 
-# No Swap
+### Efeito do câmbio No Swap
 
 ```{r, echo = FALSE, message = FALSE}
 ################################################################
@@ -3775,14 +3775,14 @@ ira_09 <- ggplot(data = ira2, aes(lag,media)) +
             geom_hline(yintercept = 0, size=0.5)+
             mytheme_baixo
 
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-CAMBIO-SWAP.pdf", width = 6, height = 6)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-CAMBIO-SWAP.pdf", width = 6, height = 6)
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
-dev.off()
+#dev.off()
 
 #write.csv(ira$irf, "C:\\Users\\aisha\\Documents\\Var da Aisha\\fir_cambio_ct.csv")
 ```
 
-## No IPCA
+### Efeito do câmbio No IPCA
 
 ```{r, echo = FALSE, message = FALSE}
 ################################################################
@@ -4014,14 +4014,14 @@ ira_09 <- ggplot(data = ira2, aes(lag,media)) +
             geom_hline(yintercept = 0, size=0.5)+
             mytheme_baixo
 
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-CAMBIO-IPCA.pdf", width = 6, height = 6)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-CAMBIO-IPCA.pdf", width = 6, height = 6)
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
-dev.off()
+#dev.off()
 
 #write.csv(ira$irf, "C:\\Users\\aisha\\Documents\\Var da Aisha\\fir_cambio_ct.csv")
 ```
 
-## No PIB
+### Efeito do câmbio No PIB
 
 ```{r, echo = FALSE, message = FALSE}
 ################################################################
@@ -4253,16 +4253,16 @@ ira_09 <- ggplot(data = ira2, aes(lag,media)) +
             geom_hline(yintercept = 0, size=0.5)+
             mytheme_baixo
 
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-CAMBIO-PIB.pdf", width = 6, height = 6)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-CAMBIO-PIB.pdf", width = 6, height = 6)
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
-dev.off()
+#dev.off()
 
 #write.csv(ira$irf, "C:\\Users\\aisha\\Documents\\Var da Aisha\\fir_cambio_ct.csv")
 ```
 
-## IPCA
+## Choques no IPCA
 
-### Ipca na razão capital-trabalho
+### Efeito do Ipca na razão capital-trabalho
 
 ```{r, echo = FALSE, message = FALSE}
 ################################################################
@@ -4495,14 +4495,14 @@ ira_09 <- ggplot(data = ira2, aes(lag,media)) +
             geom_hline(yintercept = 0, size=0.5)+
             mytheme_baixo
 
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-IPCA-CT.pdf", width = 6, height = 6)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-IPCA-CT.pdf", width = 6, height = 6)
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
-dev.off()
+#dev.off()
 
 #write.csv(ira$irf, "C:\\Users\\aisha\\Documents\\Var da Aisha\\fir_ipca_ct.csv")
 ```
 
-### Ipca no swap
+### Efeito do Ipca no swap
 
 ```{r, echo = FALSE, message = FALSE}
 ################################################################
@@ -4736,12 +4736,12 @@ ira_09 <- ggplot(data = ira2, aes(lag,media)) +
 
 
  
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-IPCA-SWAP.pdf", width = 6, height = 6)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-IPCA-SWAP.pdf", width = 6, height = 6)
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
-dev.off()
+#dev.off()
 ```
 
-### IPCA na taxa de câmbio
+### Efeito do IPCA na taxa de câmbio
 
 ```{r, echo = FALSE, message = FALSE}
 ################################################################
@@ -4974,12 +4974,12 @@ ira_09 <- ggplot(data = ira2, aes(lag,media)) +
             mytheme_baixo
 
  
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-IPCA-CAMBIO.pdf", width = 6, height = 6)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-IPCA-CAMBIO.pdf", width = 6, height = 6)
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
-dev.off()
+#dev.off()
 ```
 
-### IPCA no PIB
+### Efeito do IPCA no PIB
 
 ```{r, echo = FALSE, message = FALSE}
 ################################################################
@@ -5212,9 +5212,9 @@ ira_09 <- ggplot(data = ira2, aes(lag,media)) +
             mytheme_baixo
 
  
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-IPCA-PIB.pdf", width = 6, height = 6)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-IPCA-PIB.pdf", width = 6, height = 6)
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
-dev.off()
+#dev.off()
 ```
 
 ## Avaliando os parâmetros
@@ -5767,34 +5767,34 @@ Primeiro, plotando os gráficos com o intervalo do 16o ao 84o quantil (como feito
 ```{r, echo = FALSE, warning = FALSE, message = FALSE}
 blank <- grid.rect(gp=gpar(col="white"))
 
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Coef\\Fig-Coef1.pdf", width = 6, height = 8)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Coef\\Fig-Coef1.pdf", width = 6, height = 8)
 grid.arrange(graph_beta_ct, graph_beta_swap, graph_sd_ct, graph_sd_swap, 
              graph_beta_pib, graph_beta_cambio, graph_sd_pib, graph_sd_cambio,
              graph_beta_ipca, blank,  graph_sd_ipca, blank,
              ncol = 2, nrow = 6)
-dev.off()
+#dev.off()
 ```
 
 Mas o que acontece se incluímos o zero no eixo vertical dos coeficientes?
 
 ```{r, echo = FALSE, warning = FALSE, message = FALSE}
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Coef\\Fig-Coef2.pdf", width = 6, height = 8)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Coef\\Fig-Coef2.pdf", width = 6, height = 8)
 grid.arrange(graph_beta_ct_alt, graph_beta_swap_alt, graph_sd_ct, graph_sd_swap, 
              graph_beta_pib_alt, graph_beta_cambio_alt, graph_sd_pib, graph_sd_cambio,
              graph_beta_ipca_alt, blank,  graph_sd_ipca, blank,
              ncol = 2, nrow = 6)
-dev.off()
+#dev.off()
 ```
 
 Agora vamos repetir gráfico mas fazendo as bandas do quantil 5 a 95 (em azul) e 25 a 75 (em cinza) - sem forçar o zero no eixo dos coeficientes:
 
 ```{r, echo = FALSE, warning = FALSE, message = FALSE}
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Coef\\Fig-Coef3.pdf", width = 6, height = 8)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Coef\\Fig-Coef3.pdf", width = 6, height = 8)
 grid.arrange(graph_beta_ct2, graph_beta_swap2, graph_sd_ct2, graph_sd_swap2, 
              graph_beta_pib2, graph_beta_cambio2, graph_sd_pib2, graph_sd_cambio2,
              graph_beta_ipca2, blank,  graph_sd_ipca2, blank,
              ncol = 2, nrow = 6)
-dev.off()
+#dev.off()
 ```
 
 
@@ -6062,42 +6062,43 @@ graph_beta_ipca_ct2_alt <- ggplot(data = df2, aes(Data,media)) +
 Primeiro os gráficos com os intervalos de 16 a 84% sem forçar o zero no eixo y:
 
 ```{r, echo = FALSE, warning = FALSE, message = FALSE}
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Coef\\Fig-Coef_ct1.pdf", width = 6, height = 8)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Coef\\Fig-Coef_ct1.pdf", width = 6, height = 8)
 grid.arrange(graph_beta_swap_ct, graph_beta_pib_ct, graph_beta_cambio_ct, graph_beta_ipca_ct, ncol = 2, nrow = 2)
-dev.off()
+#dev.off()
 ```
 
 Agora o mesmo gráfico mas forçando o zero a aparecer:
 
 ```{r, echo = FALSE, warning = FALSE, message = FALSE}
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Coef\\Fig-Coef_ct2.pdf", width = 6, height = 8)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Coef\\Fig-Coef_ct2.pdf", width = 6, height = 8)
 grid.arrange(graph_beta_swap_ct_alt, graph_beta_pib_ct_alt, graph_beta_cambio_ct_alt, graph_beta_ipca_ct_alt, ncol = 2, nrow = 2)
-dev.off()
+#dev.off()
 ```
 
 E o mesmo gráfico mas com os quantis de 5 a 95 e 25 a 75:
 
 ```{r, echo = FALSE, warning = FALSE, message = FALSE}
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Coef\\Fig-Coef_ct3.pdf", width = 6, height = 8)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Coef\\Fig-Coef_ct3.pdf", width = 6, height = 8)
 grid.arrange(graph_beta_swap_ct2, graph_beta_pib_ct2, graph_beta_cambio_ct2, graph_beta_ipca_ct2, ncol = 2, nrow = 2)
-dev.off()
+#dev.off()
 ```
 
 Repete o mesmo de antes, mas incluindo zero no eixo y:
 
 ```{r, echo = FALSE, warning = FALSE, message = FALSE}
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Coef\\Fig-Coef_ct4.pdf", width = 6, height = 8)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Coef\\Fig-Coef_ct4.pdf", width = 6, height = 8)
 grid.arrange(graph_beta_swap_ct2_alt, graph_beta_pib_ct2_alt, graph_beta_cambio_ct2_alt, graph_beta_ipca_ct2_alt, ncol = 2, nrow = 2)
-dev.off()
+#dev.off()
+rm(fit1)
 ```
 
-## Diagnóstico
+# Diagnóstico
 
 Estou me baseando nos seguintes linkis:
 * www.patricklam.org/teaching/convergence_print.pdf para traceplot, density plot, running mean plot (é o plot da iteração contra a média das observações até a iteração (ele está indo de 10 em 10 para frente na média))
 * https://theoreticalecology.wordpress.com/2011/12/09/mcmc-chain-analysis-and-convergence-diagnostics-with-coda-in-r/
 
-### Diagnósticos para as médias
+## Diagnósticos para as médias
 
 Um dos diagnósticos é plotar a cadeia (usando `plot(mcmc_object)`). Ele retorna o gráfico dos valores (um gráfico de linha - quanto mais ruidoso melhor) e um traceplot que é o gráfico da distribuição. Se eu não estou enganada, os meus Betas tem distribuição à posteriori normal e falta ver a distribuição dos sigmas. Se a densidade das matrizes é inversa wishart eles tem distribuição gamma, **mas acho que não tem fórmula fechada para $\Sigma$ - preciso ver no artigo do Primeri depois.**
 
@@ -6834,11 +6835,11 @@ Agora tem o `cumuplot()` que faz o gráfico dos quantis da cadeia (de forma acumu
 # Para a razão capital trabalho
 #####################################
 
-old.par <- par(mfrow=c(5,3))
-for (i in sequencia){
-  cumuplot(mcmc_beta_ct[1:tamanho,i], auto.layout = F, main = paste("Quantis de Beta em t=", as.character(i), "da Razão Cap./Trab."))
-}
-par(old.par)
+#old.par <- par(mfrow=c(5,3))
+#for (i in sequencia){
+#  cumuplot(mcmc_beta_ct[1:tamanho,i], auto.layout = F, main = paste("Quantis de Beta em t=", as.character(i), "da Razão Cap./Trab."))
+#}
+#par(old.par)
 
 # Para os pdf
 i <- sequencia[1]
@@ -6893,9 +6894,9 @@ cumuplot(mcmc_beta_ct[1:tamanho,i], auto.layout = F, main = paste("Quantis de Be
 
 
 #old.par <- par(mfrow=c(5,3))
-for (i in sequencia){
-  cumuplot(mcmc_sd_ct[1:tamanho,i], auto.layout = F, main = paste("Quantis do D.P. em t=", as.character(i), "da Razão Cap./Trab."))
-}
+#for (i in sequencia){
+#  cumuplot(mcmc_sd_ct[1:tamanho,i], auto.layout = F, main = paste("Quantis do D.P. em t=", as.character(i), "da Razão Cap./Trab."))
+#}
 #par(old.par) 
 
 i <- sequencia[1]
@@ -6953,9 +6954,9 @@ cumuplot(mcmc_sd_ct[1:tamanho,i], auto.layout = F, main = paste("Quantis de Beta
 #####################################
 
 #old.par <- par(mfrow=c(5,3))
-for (i in sequencia){
-  cumuplot(mcmc_beta_swap[1:tamanho,i], auto.layout = F, main = paste("Quantis de Beta em t=", as.character(i), "do Swap"))
-}
+#for (i in sequencia){
+#  cumuplot(mcmc_beta_swap[1:tamanho,i], auto.layout = F, main = paste("Quantis de Beta em t=", as.character(i), "do Swap"))
+#}
 #par(old.par) 
 
 i <- sequencia[1]
@@ -7010,9 +7011,9 @@ cumuplot(mcmc_beta_swap[1:tamanho,i], auto.layout = F, main = paste("Quantis de 
 
 
 #old.par <- par(mfrow=c(5,3))
-for (i in sequencia){
-  cumuplot(mcmc_sd_swap[1:tamanho,i], auto.layout = F, main = paste("Quantis do D.P. em t=", as.character(i), "do Swap"))
-}
+#for (i in sequencia){
+#  cumuplot(mcmc_sd_swap[1:tamanho,i], auto.layout = F, main = paste("Quantis do D.P. em t=", as.character(i), "do Swap"))
+#}
 #par(old.par) 
 
 #####################################
@@ -7020,16 +7021,16 @@ for (i in sequencia){
 #####################################
 
 #old.par <- par(mfrow=c(5,3))
-for (i in sequencia){
-  cumuplot(mcmc_beta_pib[1:tamanho,i], auto.layout = F, main = paste("Quantis de Beta em t=", as.character(i), "do PIB"))
-}
+#for (i in sequencia){
+#  cumuplot(mcmc_beta_pib[1:tamanho,i], auto.layout = F, main = paste("Quantis de Beta em t=", as.character(i), "do PIB"))
+#}
 #par(old.par) 
 
 
 #old.par <- par(mfrow=c(5,3))
-for (i in sequencia){
-  cumuplot(mcmc_sd_pib[1:tamanho,i], auto.layout = F, main = paste("Quantis do D.P. em t=", as.character(i), "do PIB"))
-}
+#for (i in sequencia){
+#  cumuplot(mcmc_sd_pib[1:tamanho,i], auto.layout = F, main = paste("Quantis do D.P. em t=", as.character(i), "do PIB"))
+#}
 #par(old.par)
 
 #####################################
@@ -7037,16 +7038,16 @@ for (i in sequencia){
 #####################################
 
 #old.par <- par(mfrow=c(5,3))
-for (i in sequencia){
-  cumuplot(mcmc_beta_cambio[1:tamanho,i], auto.layout = F, main = paste("Quantis de Beta em t=", as.character(i), "do Câmbio"))
-}
+#for (i in sequencia){
+#  cumuplot(mcmc_beta_cambio[1:tamanho,i], auto.layout = F, main = paste("Quantis de Beta em t=", as.character(i), "do Câmbio"))
+#}
 #par(old.par) 
 
 
 #old.par <- par(mfrow=c(5,3))
-for (i in sequencia){
-  cumuplot(mcmc_sd_cambio[1:tamanho,i], auto.layout = F, main = paste("Quantis do D.P. em t=", as.character(i), "do Câmbio"))
-}
+#for (i in sequencia){
+#  cumuplot(mcmc_sd_cambio[1:tamanho,i], auto.layout = F, main = paste("Quantis do D.P. em t=", as.character(i), "do Câmbio"))
+#}
 #par(old.par)
 
 #####################################
@@ -7054,16 +7055,16 @@ for (i in sequencia){
 #####################################
 
 #old.par <- par(mfrow=c(5,3))
-for (i in sequencia){
-  cumuplot(mcmc_beta_ipca[1:tamanho,i], auto.layout = F, main = paste("Quantis de Beta em t=", as.character(i), "do IPCA"))
-}
+#for (i in sequencia){
+#  cumuplot(mcmc_beta_ipca[1:tamanho,i], auto.layout = F, main = paste("Quantis de Beta em t=", as.character(i), "do IPCA"))
+#}
 #par(old.par) 
 
 
 #old.par <- par(mfrow=c(5,3))
-for (i in sequencia){
-  cumuplot(mcmc_sd_ipca[1:tamanho,i], auto.layout = F, main = paste("Quantis do D.P. em t=", as.character(i), "do IPCA"))
-}
+#for (i in sequencia){
+#  cumuplot(mcmc_sd_ipca[1:tamanho,i], auto.layout = F, main = paste("Quantis do D.P. em t=", as.character(i), "do IPCA"))
+#}
 #par(old.par)
 
 ```
@@ -7138,7 +7139,7 @@ par(old.par)
 
 ```
 
-### Diagnóstico da autocorrelação
+## Diagnóstico da autocorrelação
 
 O bloco abaixo eu montei para entender melhor o que a `autocorr()` do pacote `coda` faz. No fim, vou ficar com a função de autocorrelação (não a parcial) pois ela avalia o efeito até o instante `j`. (o bloco agora está oculto)
 
@@ -7421,12 +7422,12 @@ p5 <- p5 + theme(axis.text.x = element_text(angle=25, vjust = 2, size = 5, hjust
 p5 <- p5 + labs(linetype = "Lags") # I couldn't fix the legend name properly, so why not?
 p5 <- p5 + labs(colour='Lags')
 
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Fig-corr.pdf", width = 12, height = 6)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Fig-corr.pdf", width = 12, height = 6)
 ggarrange(p1a, p1, p2a, p2, p3a, p3, p4a, p4, p5a, p5, common.legend = TRUE, ncol = 2, nrow = 5)
-dev.off()
+#dev.off()
 ```
 
-### Diagnóstico multivariado
+## Diagnóstico multivariado
 
 A estatística de Gelman-Rubin mede se há diferença significativa entre a variância dentro e entre diversas cadeias utilizando um fator de redução de escala. Aqui eu optei por simular duas cadeias e fazer a comparação entre elas. Em função da memória do computador eu utilizei um número menor de iterações salvas: ao invés de salvar todos os valores, armazenei apenas os 10.000 últimos valores (20%).
 
@@ -7469,10 +7470,10 @@ tempo <- nrow(var1)
 
 set.seed(6969)
 pm <- proc.time()
-fit1 <- bvar.sv.tvp(var1, p=p., tau = tau., nburn = nburn., nrep = nrep., nf = nf., thinfac = thinfac.)
-#fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fita.rds")
+#fit1 <- bvar.sv.tvp(var1, p=p., tau = tau., nburn = nburn., nrep = nrep., nf = nf., thinfac = thinfac.)
+fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fita.rds")
 proc.time() - pm
-saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fita.rds")
+#saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fita.rds")
 
 
 betas_ct     <- parameter.draws(fit1, type = "lag1", row = pos_ct, col = pos_ct)
@@ -7492,9 +7493,9 @@ mcmc_1 <- mcmc(cbind(betas_ct, betas_swap, betas_pib, betas_cambio, betas_ipca, 
 rm(fit1, betas_ct, betas_swap, betas_pib, betas_cambio, betas_ipca, sd_ct, sd_swap, sd_pib, sd_cambio, sd_ipca)
 
 set.seed(9696)
-#fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fitb.rds")
-fit1 <- bvar.sv.tvp(var1, p=p., tau = tau., nburn = nburn., nrep = nrep., nf = nf., thinfac = thinfac.)
-saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fitb.rds")
+fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fitb.rds")
+#fit1 <- bvar.sv.tvp(var1, p=p., tau = tau., nburn = nburn., nrep = nrep., nf = nf., thinfac = thinfac.)
+#saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fitb.rds")
 
 betas_ct     <- parameter.draws(fit1, type = "lag1", row = pos_ct, col = pos_ct)
 betas_swap  <- parameter.draws(fit1, type = "lag1", row = pos_swap, col = pos_swap)
@@ -7514,7 +7515,7 @@ rm(fit1, betas_ct, betas_swap, betas_pib, betas_cambio, betas_ipca, sd_ct, sd_sw
 
 lista <- mcmc.list(mcmc_1, mcmc_2)
 diagnostico <- gelman.diag(lista)
-tail(dignostico)
+tail(diagnostico)
 #nrow(diagnostico$psrf) #2140 linhas
 
 df1 <- data.frame(seq(1, nrow(diagnostico$psrf), 1) , diagnostico$psrf[,1], diagnostico$psrf[,2])
@@ -7537,9 +7538,9 @@ p2 <- ggplot(data = df1, aes(parametro)) +
  theme_bw()+
  theme(axis.text.x = element_text(angle=30, hjust = 1, size = 7), axis.title.x = element_text(size = 7), axis.title.y = element_text(size = 7))
 
-pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig_brooks.pdf", width = 6, height = 3)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig_brooks.pdf", width = 6, height = 3)
 p2
-dev.off()
+#dev.off()
 
 head(df2)
 #gelman.plot(lista)
@@ -7559,63 +7560,130 @@ Posso usar o que eu já tinha estimado.
 
 ## 6 passos à frente (1 semestre)
 
-```{r, echo = FALSE, warning=FALSE, message=FALSE}
+```{r, echo = FALSE, warning=FALSE, message=FALSE, eval = FALSE}
 # Previsão
-nf. <- 6
-
-var1 <- cbind(capital_trabalho_final*100, ipca, PIB2*100, swap, cambio*100) # The bvar function does not allows data.frames
+#Inflação - Produto - Juros - Câmbio - Desigualdade.
+var1 <- cbind(capital_trabalho_final*100, ipca, PIB*100, swap, cambio) # The bvar function does not allows data.frames
+#var2 <- cbind(capital_trabalho_final, swap, PIB2, cambio, ipca) # The bvar function does not allows data.frames
 names(var1) <- c("capital_trabalho", "ipca", "pib", "swap", "cambio")
+#names(var1) <- c("ipca", "pib", "swap", "cambio","capital_trabalho") # Ficou uma merda
+
+#var1 <- c(1,2,3,4,5)
+
+pos_ct     <- grep("capital_trabalho", names(var1))
+pos_swap   <- grep("swap", names(var1))
+pos_pib    <- grep("pib", names(var1))
+pos_cambio <- grep("cambio", names(var1))
+pos_ipca   <- grep("ipca", names(var1))
+
+nburn.    <- 1000000 # Burn the first 100kk replications
+nrep.     <- 100000 # Estimate another 100k times after burn in
+thinfac.  <- 4 # But keep only 1 in 4 estimates
+p.        <- 1 # Number of lags
+tau.      <- 48 - p. # Number of observations to use as prior
+nf.       <- 6 # Number of forecast periods
+k_B.      <- 6 # Fator de inflação na priori
+k_A.      <- 4 # Fator de inflação na priori
+
+# No idea what's this for
+tamanho <- floor(1/thinfac.*nrep.)
+# número de tempos
+tempo <- nrow(var1)
 
 # Prepara um vetor com as últimas nf. observações para deixar de fora
 amostra_1 <- var1[(nrow(var1)-nf.+1):(nrow(var1)),] 
 var1      <- var1[1:(nrow(var1)-nf.),]
 
 set.seed(2747)
-#fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit6for.rds")
-fit1 <- bvar.sv.tvp(var1, p=p., tau = tau., nburn = nburn., nrep = nrep., nf = nf., thinfac = thinfac.)
-saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit6for.rds")
+fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit6for.rds")
+#fit1 <- bvar.sv.tvp(var1, p=p., tau = tau., nburn = nburn., nrep = nrep., nf = nf., thinfac = thinfac.)
+#saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit6for.rds")
 #rm(fit1)
 ```
 
 ## 12 passos à frente (1 ano)
 
-```{r, echo = FALSE, warning=FALSE, message=FALSE}
-rm(fit1)
-# Previsão
-nf. <- 12
-
-var1 <- cbind(capital_trabalho_final*100, ipca, PIB2*100, swap, cambio*100) # The bvar function does not allows data.frames
+```{r, echo = FALSE, warning=FALSE, message=FALSE, eval = FALSE}
+#Inflação - Produto - Juros - Câmbio - Desigualdade.
+var1 <- cbind(capital_trabalho_final*100, ipca, PIB*100, swap, cambio) # The bvar function does not allows data.frames
+#var2 <- cbind(capital_trabalho_final, swap, PIB2, cambio, ipca) # The bvar function does not allows data.frames
 names(var1) <- c("capital_trabalho", "ipca", "pib", "swap", "cambio")
+#names(var1) <- c("ipca", "pib", "swap", "cambio","capital_trabalho") # Ficou uma merda
+
+#var1 <- c(1,2,3,4,5)
+
+pos_ct     <- grep("capital_trabalho", names(var1))
+pos_swap   <- grep("swap", names(var1))
+pos_pib    <- grep("pib", names(var1))
+pos_cambio <- grep("cambio", names(var1))
+pos_ipca   <- grep("ipca", names(var1))
+
+nburn.    <- 1000000 # Burn the first 100kk replications
+nrep.     <- 100000 # Estimate another 100k times after burn in
+thinfac.  <- 4 # But keep only 1 in 4 estimates
+p.        <- 1 # Number of lags
+tau.      <- 48 - p. # Number of observations to use as prior
+nf.       <- 12 # Number of forecast periods
+k_B.      <- 6 # Fator de inflação na priori
+k_A.      <- 4 # Fator de inflação na priori
+
+# No idea what's this for
+tamanho <- floor(1/thinfac.*nrep.)
+# número de tempos
+tempo <- nrow(var1)
 
 # Prepara um vetor com as últimas nf. observações para deixar de fora
 amostra_1 <- var1[(nrow(var1)-nf.+1):(nrow(var1)),] 
 var1      <- var1[1:(nrow(var1)-nf.),]
 
 set.seed(2747)
-#fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit6for.rds")
-fit1 <- bvar.sv.tvp(var1, p=p., tau = tau., nburn = nburn., nrep = nrep., nf = nf., thinfac = thinfac.)
-saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit12for.rds")
+fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit12for.rds")
+#fit1 <- bvar.sv.tvp(var1, p=p., tau = tau., nburn = nburn., nrep = nrep., nf = nf., thinfac = thinfac.)
+#saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit12for.rds")
 #rm(fit1)
 ```
 
 ## 24 passos à frente (2 anos)
 
-```{r, echo = FALSE, warning=FALSE, message=FALSE}
+```{r, echo = FALSE, warning=FALSE, message=FALSE, eval = FALSE}
 rm(fit1)
 # Previsão
-nf. <- 12
-
-var1 <- cbind(capital_trabalho_final*100, ipca, PIB2*100, swap, cambio*100) # The bvar function does not allows data.frames
+#Inflação - Produto - Juros - Câmbio - Desigualdade.
+var1 <- cbind(capital_trabalho_final*100, ipca, PIB*100, swap, cambio) # The bvar function does not allows data.frames
+#var2 <- cbind(capital_trabalho_final, swap, PIB2, cambio, ipca) # The bvar function does not allows data.frames
 names(var1) <- c("capital_trabalho", "ipca", "pib", "swap", "cambio")
+#names(var1) <- c("ipca", "pib", "swap", "cambio","capital_trabalho") # Ficou uma merda
+
+#var1 <- c(1,2,3,4,5)
+
+pos_ct     <- grep("capital_trabalho", names(var1))
+pos_swap   <- grep("swap", names(var1))
+pos_pib    <- grep("pib", names(var1))
+pos_cambio <- grep("cambio", names(var1))
+pos_ipca   <- grep("ipca", names(var1))
+
+nburn.    <- 1000000 # Burn the first 100kk replications
+nrep.     <- 100000 # Estimate another 100k times after burn in
+thinfac.  <- 4 # But keep only 1 in 4 estimates
+p.        <- 1 # Number of lags
+tau.      <- 48 - p. # Number of observations to use as prior
+nf.       <- 24 # Number of forecast periods
+k_B.      <- 6 # Fator de inflação na priori
+k_A.      <- 4 # Fator de inflação na priori
+
+# No idea what's this for
+tamanho <- floor(1/thinfac.*nrep.)
+# número de tempos
+tempo <- nrow(var1)
 
 # Prepara um vetor com as últimas nf. observações para deixar de fora
 amostra_1 <- var1[(nrow(var1)-nf.+1):(nrow(var1)),] 
 var1      <- var1[1:(nrow(var1)-nf.),]
 
 set.seed(2747)
-#fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit6for.rds")
-fit1 <- bvar.sv.tvp(var1, p=p., tau = tau., nburn = nburn., nrep = nrep., nf = nf., thinfac = thinfac.)
-saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit24for.rds")
+fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit24for.rds")
+#fit1 <- bvar.sv.tvp(var1, p=p., tau = tau., nburn = nburn., nrep = nrep., nf = nf., thinfac = thinfac.)
+#saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit24for.rds")
 #rm(fit1)
 ```
 
