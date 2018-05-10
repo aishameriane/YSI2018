@@ -72,7 +72,11 @@ Por outro lado, se a taxa de câmbio aumenta, os investimentos em moeda estrangei
 
 <span style="color:green">**Resposta**</span>:
 
-6.  <span style="color:red">**Dúvida 6:** </span>
+6.  <span style="color:red">**Dúvida 6:** </span> Na [documentação do pacote](https://github.com/FK83/bvarsv/blob/master/bvarsv_Nov2015_website.pdf), na parte de previsão, ele calcula algo que ele chama de média condicional aos parâmetros ($\mu_{T+j}^{(\ell)}$). Isso seria como a média incondicional do modelo naquele instante? Tô meio confusa, porque o modelo não é estacionário... ![C:/Users/aisha/Pictures/hmm.jpg]\
+
+<span style="color:green">**Resposta**</span>: 
+
+7.  <span style="color:red">**Dúvida 7:** </span> Com relação ao MAPE e MSE, eu calculo para cada variável individualmente, correto? Não é tipo uma medida "global"...?
 
 <span style="color:green">**Resposta**</span>: 
 
@@ -89,7 +93,7 @@ If mirror 10 ("UFRJ") is offline, try changing `ind = 10` to `ind = 1`. Do the s
 ```{r, warning = FALSE, message = FALSE}
 chooseCRANmirror(graphics = FALSE, ind = 10)
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(devtools, ggplot2, forecast, BETS, seasonal, seasonalview, bvarsv, lubridate, zoo, stargazer, gridExtra, reshape2, ggfortify, RColorBrewer, scales, quantmod, PerformanceAnalytics, strucchange, coda, foreach, doParallel, knitr, grid, ggpubr, gdata, vars, urca, compiler) 
+pacman::p_load(devtools, ggplot2, forecast, BETS, seasonal, seasonalview, bvarsv, lubridate, zoo, stargazer, gridExtra, reshape2, ggfortify, RColorBrewer, scales, quantmod, PerformanceAnalytics, strucchange, coda, foreach, doParallel, knitr, grid, ggpubr, gdata, vars, urca, compiler, DescTools) 
 ```
 
 These are some auxiliary functions used later in the code (I took them from `bvarsv` documentation):
@@ -1625,6 +1629,171 @@ ira_09 <- ggplot(data = ira2, aes(lag,media)) +
  
 #pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig-FIR-Swap-CT.pdf", width = 6, height = 6)
 grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_05, ira_06, ira_07, ira_08, ira_09, ira_final, ncol=2, nrow = 5)
+#dev.off()
+```
+
+Na razão capital trabalho porém em períodos de mudança no Banco Central.
+
+Os presidentes do BCB no período analisado foram:
+
+* Arminio Fraga Neto - 4/3/1999 a 1/1/2003 
+* Henrique de Campos Meirelles - 1/1/2003 a 1/1/2011 $t=37$
+* Alexandre Antonio Tombini - 1/1/2011 a 8/6/2016 $t=133$
+* Ilan Goldfajn  - 9/6/2016 - atual $t=198$
+
+Supondo que existe algum tipo de coordenação entre política fiscal e monetária, peguei os Ministros da Fazenda no Período também:
+
+* Pedro Malan - 01/01/1995 a 01/01/2003 
+* Antonio Palocci Filho - 01/01/2003 a 27/03/2006 $t=37$
+* Guido Mantega - 27/03/2006 a 01/01/2015 $t=75$
+* Joaquim Levy - 01/01/2015 a 18/12/2015 $t=183$
+* Nelson Barbosa - 18/12/2015 a 12/05/2016 $t=192$
+* Henrique Meirelles - 12/05/2016 a 10/04/2018 $t=197$
+* Eduardo Guardia - 10/04/2018 - atual 
+
+```{r, echo = FALSE, message = FALSE}
+################################################################
+# Função Impulso resposta do swap na razão capital-trabalho 
+################################################################
+ 
+# Henrique de Campos Meirelles - 1/1/2003 a 1/1/2011 $t=37$ e Antonio Palocci Filho - 01/01/2003 a 27/03/2006 $t=37$
+
+ira <- impulse.responses(fit1, impulse.variable = pos_swap, response.variable = pos_ct, scenario = 3, nhor = 48, t=37, draw.plot = FALSE)
+
+ira2 <- data.frame(seq(1:nhor), t(apply(ira$irf, 2,stat.helper2)))
+names(ira2) <- c("lag", "p5", "p25", "media", "p75", "p95")
+
+ira_01 <- ggplot(data = ira2, aes(lag,media)) +
+            geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = media), size = 0.25)+
+            geom_ribbon(aes(x=lag, ymax=p25, ymin=p5), fill="skyblue3", alpha=.3) +
+            geom_ribbon(aes(x=lag, ymax=media, ymin=p25), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=lag, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=lag, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
+            xlab("Meses") + ylab("Razão Capital-Trabalho") + ggtitle("Janeiro/2003 - Palocci e Meirelles (t=37)") +
+            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_x_continuous(breaks=number_ticks(10))+
+            geom_hline(yintercept = 0, size=0.5)+
+            mytheme_cima
+
+# Guido Mantega - 27/03/2006 a 01/01/2015 $t=75$ (ministro da fazenda)
+
+# Apagão elétrico (jun 2001) 02
+ira <- impulse.responses(fit1, impulse.variable = pos_swap, response.variable = pos_ct, scenario = 3, nhor = 48, t=75, draw.plot = FALSE)
+
+ira2 <- data.frame(seq(1:nhor), t(apply(ira$irf, 2,stat.helper2)))
+names(ira2) <- c("lag", "p5", "p25", "media", "p75", "p95")
+
+ira_02 <- ggplot(data = ira2, aes(lag,media)) +
+            geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = media), size = 0.25)+
+            geom_ribbon(aes(x=lag, ymax=p25, ymin=p5), fill="skyblue3", alpha=.3) +
+            geom_ribbon(aes(x=lag, ymax=media, ymin=p25), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=lag, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=lag, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
+            xlab("Meses") + ylab("Razão Capital-Trabalho") + ggtitle("Março/2006 - Mantega e Meirelles (t=75)") +
+            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_x_continuous(breaks=number_ticks(10))+
+            geom_hline(yintercept = 0, size=0.5)+
+            mytheme_cima
+
+# Alexandre Antonio Tombini - 1/1/2011 a 8/6/2016 $t=133$
+ira <- impulse.responses(fit1, impulse.variable = pos_swap, response.variable = pos_ct, scenario = 3, nhor = 48, t = 133, draw.plot = FALSE)
+
+ira2 <- data.frame(seq(1:nhor), t(apply(ira$irf, 2,stat.helper2)))
+names(ira2) <- c("lag", "p5", "p25", "media", "p75", "p95")
+
+ira_03 <- ggplot(data = ira2, aes(lag,media)) +
+            geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = media), size = 0.25)+
+            geom_ribbon(aes(x=lag, ymax=p25, ymin=p5), fill="skyblue3", alpha=.3) +
+            geom_ribbon(aes(x=lag, ymax=media, ymin=p25), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=lag, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=lag, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
+            xlab("Meses") + ylab("Razão Capital-Trabalho") + ggtitle("Nov/2011 - Mantega e Tombini (t=133)") +
+            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_x_continuous(breaks=number_ticks(10))+
+            geom_hline(yintercept = 0, size=0.5)+
+            mytheme_cima
+
+# Joaquim Levy - 01/01/2015 a 18/12/2015 $t=183$
+ira <- impulse.responses(fit1, impulse.variable = pos_swap, response.variable = pos_ct, scenario = 3, nhor = 48, t=183, draw.plot = FALSE)
+
+ira2 <- data.frame(seq(1:nhor), t(apply(ira$irf, 2,stat.helper2)))
+names(ira2) <- c("lag", "p5", "p25", "media", "p75", "p95")
+
+ira_04 <- ggplot(data = ira2, aes(lag,media)) +
+            geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = media), size = 0.25)+
+            geom_ribbon(aes(x=lag, ymax=p25, ymin=p5), fill="skyblue3", alpha=.3) +
+            geom_ribbon(aes(x=lag, ymax=media, ymin=p25), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=lag, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=lag, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
+            xlab("Meses") + ylab("Razão Capital-Trabalho") + ggtitle("Jan/2015 - Levy e Tombini (t=183)") +
+            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_x_continuous(breaks=number_ticks(10))+
+            geom_hline(yintercept = 0, size=0.5)+
+            mytheme_cima
+
+# Nelson Barbosa - 18/12/2015 a 12/05/2016 $t=192$
+
+ira <- impulse.responses(fit1, impulse.variable = pos_swap, response.variable = pos_ct, scenario = 3, nhor = 48, t = 192, draw.plot = FALSE)
+
+ira2 <- data.frame(seq(1:nhor), t(apply(ira$irf, 2,stat.helper2)))
+names(ira2) <- c("lag", "p5", "p25", "media", "p75", "p95")
+
+ira_09 <- ggplot(data = ira2, aes(lag,media)) +
+            geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = media), size = 0.25)+
+            geom_ribbon(aes(x=lag, ymax=p25, ymin=p5), fill="skyblue3", alpha=.3) +
+            geom_ribbon(aes(x=lag, ymax=media, ymin=p25), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=lag, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=lag, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
+            xlab("Meses") + ylab("Razão Capital-Trabalho") + ggtitle("Jan/2015 - Nelson Barbosa e Tombini (t=192)") +
+            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_x_continuous(breaks=number_ticks(10))+
+            geom_hline(yintercept = 0, size=0.5)+
+            mytheme_baixo
+
+# * Ilan Goldfajn  - 9/6/2016 - atual $t=198$ e Henrique Meirelles - 12/05/2016 a 10/04/2018 $t=197$
+ira <- impulse.responses(fit1, impulse.variable = pos_swap, response.variable = pos_ct, scenario = 3, nhor = 48, t = 197, draw.plot = FALSE)
+
+ira2 <- data.frame(seq(1:nhor), t(apply(ira$irf, 2,stat.helper2)))
+names(ira2) <- c("lag", "p5", "p25", "media", "p75", "p95")
+
+ira_final <- ggplot(data = ira2, aes(lag,media)) +
+            geom_line(aes(y = p5), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = p25), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p75), colour = 'skyblue4', linetype = "longdash")+
+            geom_line(aes(y = p95), colour = 'skyblue3', linetype = "dashed") +
+            geom_line(aes(y = media), size = 0.25)+
+            geom_ribbon(aes(x=lag, ymax=p25, ymin=p5), fill="skyblue3", alpha=.3) +
+            geom_ribbon(aes(x=lag, ymax=media, ymin=p25), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=lag, ymax=p75, ymin=media), fill="skyblue4", alpha=.3) +
+            geom_ribbon(aes(x=lag, ymax=p95, ymin=p75), fill="skyblue3", alpha=.3) +
+            xlab("Meses") + ylab("Razão Capital-Trabalho") + ggtitle("Jun/2016 Meirelles e Goldfajn (t=197)") +
+            scale_y_continuous(breaks = number_ticks(10)) +
+            scale_x_continuous(breaks=number_ticks(10))+
+            geom_hline(yintercept = 0, size=0.5)+
+            mytheme_baixo
+ 
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\FIR\\Fig-FIR-Swap-CT-bcb.pdf", width = 6, height = 4)
+grid.arrange(ira_01,  ira_02,  ira_03,  ira_04,  ira_09, ira_final, ncol=2, nrow = 3)
 #dev.off()
 ```
 
@@ -7538,7 +7707,7 @@ p2 <- ggplot(data = df1, aes(parametro)) +
  theme_bw()+
  theme(axis.text.x = element_text(angle=30, hjust = 1, size = 7), axis.title.x = element_text(size = 7), axis.title.y = element_text(size = 7))
 
-#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Figuras\\FIR\\Fig_brooks.pdf", width = 6, height = 3)
+#pdf(file = "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Imagens\\Fig_brooks.pdf", width = 6, height = 3)
 p2
 #dev.off()
 
@@ -7551,16 +7720,157 @@ rm(fit1)
 
 # Previsão
 
-Fiz previsão 1, 6, 12, e 24 passos à frente.
+Fiz previsão $nf = 1, 6, 12, 24$ passos à frente.
 
+O funcionamento do algoritmo the previsão é o seguinte:
+
+1. Para cada uma das iterações MCMC (no meu caso, $\ell = 1, \ldots, 100.000$);
+    a. Simula a trajetória dos parâmetros para $nf$ períodos à frente, baseado na iteração atual $\ell$;
+    b. Simula os vetores de erros $\varepsilon_{T+j}$, $j=1, \ldots, nf$ a partir de uma normal;
+    c. Usa os parâmetros e erros para simular observações previstas usando o processo gerador dos dados que está no início do documento;
+    d. Para cada período $j = 1, \ldots, nf$ calcula o vetor de médias e a matriz de variâncias e covariâncias condicional aos parâmetros simulados até $T+j$.
+2. "Encolhe as observações": fica com uma em cada `thinfac` observações (aqui usei uma em 4);
+3.  Entrega os resultados:
+    * `fc.ydraws` é um objeto de dimensão `[5 \times nf \times 25.000]` (5 variáveis no var, nf é o número de períodos previsto e 25.000 são o número de observações que eu guardo das 100.000 simulações). Por exemplo, `fc.ydraws[1,3,]` contém todas as repetições da primeira variável do VAR, 3 períodos à frente;
+    * `fc.mdraws` contém as médias (que que é isso?) condicionais aos parâmetrs. Seu tamanho é o mesmo de `fc.ydraws`;
+    * `fc.vdraws` contém as variâncias previstas, $V_{T+j}^{(\ell)}$ e tem tamanho $[0.5\cdot 5 \cdot (5+1) \times nf \times 25000]$. Por exemplo, `fc.vdraws[,1,1]` contém os elementos empilhados de $V_{T+1}^{(1)}$ e é a primeira amostra das matriz de variância e covariância para todas variáveis, um período à frente.
+
+## Medidas de erro de previsão usadas
+
+A primeira coisa é implementar uma função para calcular o [MASE](https://robjhyndman.com/papers/mase.pdf) (_mean absolute scaled error_). Defina o termo de erro de um passo à frente como $e_t = y_t - \hat{y}_t$. Então, podemos definir um erro padronizado como
+
+$$q_t = \frac{e_t}{\frac{1}{n-1}\sum\limits_{i=2}^n |y_i - y_{i-1}|},$$
+que é independente da escala dos dados das séries. Então, o erro absoluto padronizado médio (algumas pessoas traduzem como escalado ou escalar, eu achei feio demais) é definido por
+
+$$\text{MASE} = \text{média }(|q_t|)$$
+
+Além desse, vou calcular também outras 2 medidas comuns, MAPE (erro médio percentual absoluto) e o MSE (erro quadrático médio). Esses estão implementados no R dentro do pacote `DescTools`.
+
+Então vou fazer umas funções auxiliares para calcular o MASE e também para juntar os resultados em uma tabelinha.
+
+```{r, warning = FALSE, message = FALSE}
+# O denominador do MASE é fixo, então vou calcular ele separadamente
+# Como eu junto todas as variáveis do VAR no objeto var1, vou aplicar a função sobre as colunas do var1
+
+den_MASE <- function(serie){
+  n <- length(serie)
+  soma <- vector()
+  for (i in 2:n){
+    soma[i-1] <- abs(serie[i] - serie[i-1])
+  }
+  x <- sum(soma)/(n-1)
+  x
+}
+
+```
 
 ## 1 passo à frente
 
-Posso usar o que eu já tinha estimado.
+~Posso usar o que eu já tinha estimado.~ Não posso usar o que eu tinha estimado porque eu não separei o pedaço da amostra que vai ficar de comparação.
+
+```{r, message = FALSE, warning = FALSE}
+rm(fit1)
+# Previsão
+#Inflação - Produto - Juros - Câmbio - Desigualdade.
+var1 <- cbind(capital_trabalho_final*100, ipca, PIB*100, swap, cambio) # The bvar function does not allows data.frames
+#var2 <- cbind(capital_trabalho_final, swap, PIB2, cambio, ipca) # The bvar function does not allows data.frames
+names(var1) <- c("capital_trabalho", "ipca", "pib", "swap", "cambio")
+#names(var1) <- c("ipca", "pib", "swap", "cambio","capital_trabalho") # Ficou uma merda
+
+#var1 <- c(1,2,3,4,5)
+
+pos_ct     <- grep("capital_trabalho", names(var1))
+pos_swap   <- grep("swap", names(var1))
+pos_pib    <- grep("pib", names(var1))
+pos_cambio <- grep("cambio", names(var1))
+pos_ipca   <- grep("ipca", names(var1))
+
+nburn.    <- 1000000 # Burn the first 100kk replications
+nrep.     <- 100000 # Estimate another 100k times after burn in
+thinfac.  <- 4 # But keep only 1 in 4 estimates
+p.        <- 1 # Number of lags
+tau.      <- 48 - p. # Number of observations to use as prior
+nf.       <- 1 # Number of forecast periods
+k_B.      <- 6 # Fator de inflação na priori
+k_A.      <- 4 # Fator de inflação na priori
+
+# No idea what's this for
+tamanho <- floor(1/thinfac.*nrep.)
+# número de tempos
+tempo <- nrow(var1)
+
+# Prepara um vetor com as últimas nf. observações para deixar de fora
+amostra_1 <- var1[(nrow(var1)-nf.+1):(nrow(var1)),] 
+var1      <- var1[1:(nrow(var1)-nf.),]
+
+set.seed(2747)
+fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit1for.rds")
+#fit1 <- bvar.sv.tvp(var1, p=p., tau = tau., nburn = nburn., nrep = nrep., nf = nf., thinfac = thinfac.)
+#saveRDS(fit1, "D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\Dissertação\\YSI - Buenos Aires\\Testes\\fit1for.rds")
+#rm(fit1)
+```
+
+
+```{r, warning = FALSE, message = FALSE}
+# Primeiro eu monto um objeto só com a previsão
+# Eu sei que essa coisa tem três dimensões e quero calcular a média da terceira dimensão e ficar com uma matriz
+var1_prev <- apply(fit1$fc.ydraws, c(1,2), mean)
+
+# Agora preciso calcular os erros de previsão em cada período
+# nf é o número de períodos de previsão
+# amostra1 é onde ficam guardados os valores que estou prevendo
+# var1_prev é onde ficam guardados os valores que eu previ
+
+amostra1 <- matrix(amostra_1, ncol=nf.)
+erro_prev <- amostra1 - var1_prev
+
+q_t <- erro_prev/apply(var1[((tau.+p.+1):nrow(var1)),], 2, FUN = den_MASE)
+
+MASE_1 <- abs(q_t)
+
+MAPE_1 <- vector()
+MSE_1  <- vector()
+
+for (i in 1:ncol(var1)){
+   MAPE_1[i] <- MAPE(x = var1_prev[i,1], ref = amostra1[i,1])
+   MSE_1[i] <- MSE(x = var1_prev[i,1], ref = amostra1[i,1])
+}  
+  
+```
+
+Agora estimo um modelo VAR(1) simples para comparar
+
+```{r, warning = FALSE, message = FALSE}
+fit_simples <- VAR(var1, p=p.)
+var_simples_prev <- predict(fit_simples, n.ahead = nf.)
+vars_prev <- vector()
+
+for (i in 1:ncol(var1)){
+  vars_prev[i] <-  (var_simples_prev[[1]][[i]][1])
+}
+
+erro_simples <- amostra_1 - vars_prev
+
+q_t <- erro_simples/apply(var1[((tau.+p.+1):nrow(var1)),], 2, FUN = den_MASE)
+
+MASE_1_simples <- abs(q_t)
+
+MAPE_1_simples <- vector()
+MSE_1_simples  <- vector()
+vars_prev <- matrix(vars_prev, ncol = 1)
+amostra_1 <- matrix(amostra_1, ncol = 1)
+
+for (i in 1:ncol(var1)){
+   MAPE_1_simples[i] <- MAPE(x = vars_prev[i,1], ref = amostra_1[i,1])
+   MSE_1_simples[i] <- MSE(x = vars_prev[i,1], ref = amostra_1[i,1])
+} 
+
+```
 
 ## 6 passos à frente (1 semestre)
 
-```{r, echo = FALSE, warning=FALSE, message=FALSE, eval = FALSE}
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+rm(fit1)
 # Previsão
 #Inflação - Produto - Juros - Câmbio - Desigualdade.
 var1 <- cbind(capital_trabalho_final*100, ipca, PIB*100, swap, cambio) # The bvar function does not allows data.frames
@@ -7601,9 +7911,64 @@ fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\
 #rm(fit1)
 ```
 
+```{r, warning = FALSE, message = FALSE}
+# Primeiro eu monto um objeto só com a previsão
+# Eu sei que essa coisa tem três dimensões e quero calcular a média da terceira dimensão e ficar com uma matriz
+var6_prev <- apply(fit1$fc.ydraws, c(1,2), mean)
+
+# Agora preciso calcular os erros de previsão em cada período
+# nf é o número de períodos de previsão
+# amostra1 é onde ficam guardados os valores que estou prevendo
+# var1_prev é onde ficam guardados os valores que eu previ
+
+amostra6 <- t(amostra_1)
+erro_prev <- amostra6 - var6_prev
+
+q_t <- abs(erro_prev/apply(var1[((tau.+p.+1):nrow(var1)),], 2, FUN = den_MASE))
+
+MASE_6 <- apply(q_t, 1, sum)
+
+MAPE_6 <- vector()
+MSE_6  <- vector()
+
+for (i in 1:ncol(var1)){
+    MAPE_6[i] <- MAPE(x = var6_prev[i,1:nf.], ref = amostra6[i,1:nf.])
+    MSE_6[i] <- MSE(x = var6_prev[i,1:nf.], ref = amostra6[i,1:nf.])
+} 
+
+```
+
+Agora estimo um modelo VAR(1) simples para comparar
+
+```{r, warning = FALSE, message = FALSE}
+fit_simples <- VAR(var1, p=p.)
+var_simples_prev <- predict(fit_simples, n.ahead = nf.)
+vars_prev <- matrix(NA, ncol = ncol(var1), nrow = nf.)
+
+for (i in 1:ncol(var1)){
+  vars_prev[,i] <-  (var_simples_prev[[1]][[i]][,1])
+}
+
+erro_simples <- amostra_1 - vars_prev
+
+q_t <- abs(erro_simples/apply(var1[((tau.+p.+1):nrow(var1)),], 2, FUN = den_MASE))
+
+MASE_6_simples <- apply(q_t, 2, sum)
+
+MAPE_6_simples <- vector()
+MSE_6_simples  <- vector()
+
+for (i in 1:ncol(var1)){
+   MAPE_6_simples[i] <- MAPE(x = vars_prev[1:nf.,i], ref = amostra_1[1:nf.,i])
+   MSE_6_simples[i] <- MSE(x = vars_prev[1:nf.,i], ref = amostra_1[1:nf.,i])
+} 
+
+```
+
 ## 12 passos à frente (1 ano)
 
-```{r, echo = FALSE, warning=FALSE, message=FALSE, eval = FALSE}
+```{r, warning=FALSE, message=FALSE}
+rm(fit1)
 #Inflação - Produto - Juros - Câmbio - Desigualdade.
 var1 <- cbind(capital_trabalho_final*100, ipca, PIB*100, swap, cambio) # The bvar function does not allows data.frames
 #var2 <- cbind(capital_trabalho_final, swap, PIB2, cambio, ipca) # The bvar function does not allows data.frames
@@ -7643,9 +8008,63 @@ fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\
 #rm(fit1)
 ```
 
+```{r, warning = FALSE, message = FALSE}
+# Primeiro eu monto um objeto só com a previsão
+# Eu sei que essa coisa tem três dimensões e quero calcular a média da terceira dimensão e ficar com uma matriz
+var12_prev <- apply(fit1$fc.ydraws, c(1,2), mean)
+
+# Agora preciso calcular os erros de previsão em cada período
+# nf é o número de períodos de previsão
+# amostra1 é onde ficam guardados os valores que estou prevendo
+# var1_prev é onde ficam guardados os valores que eu previ
+
+amostra12 <- t(amostra_1)
+erro_prev <- amostra12 - var12_prev
+
+q_t <- abs(erro_prev/apply(var1[((tau.+p.+1):nrow(var1)),], 2, FUN = den_MASE))
+
+MASE_12 <- apply(q_t, 1, sum)
+
+MAPE_12 <- vector()
+MSE_12  <- vector()
+
+for (i in 1:ncol(var1)){
+    MAPE_12[i] <- MAPE(x = var12_prev[i,1:nf.], ref = amostra12[i,1:nf.])
+    MSE_12[i] <- MSE(x = var12_prev[i,1:nf.], ref = amostra12[i,1:nf.])
+} 
+
+```
+
+Agora estimo um modelo VAR(1) simples para comparar
+
+```{r, warning = FALSE, message = FALSE}
+fit_simples <- VAR(var1, p=p.)
+var_simples_prev <- predict(fit_simples, n.ahead = nf.)
+vars_prev <- matrix(NA, ncol = ncol(var1), nrow = nf.)
+
+for (i in 1:ncol(var1)){
+  vars_prev[,i] <-  (var_simples_prev[[1]][[i]][,1])
+}
+
+erro_simples <- amostra_1 - vars_prev
+
+q_t <- abs(erro_simples/apply(var1[((tau.+p.+1):nrow(var1)),], 2, FUN = den_MASE))
+
+MASE_12_simples <- apply(q_t, 2, sum)
+
+MAPE_12_simples <- vector()
+MSE_12_simples  <- vector()
+
+for (i in 1:ncol(var1)){
+   MAPE_12_simples[i] <- MAPE(x = vars_prev[1:nf.,i], ref = amostra_1[1:nf.,i])
+   MSE_12_simples[i] <- MSE(x = vars_prev[1:nf.,i], ref = amostra_1[1:nf.,i])
+} 
+
+```
+
 ## 24 passos à frente (2 anos)
 
-```{r, echo = FALSE, warning=FALSE, message=FALSE, eval = FALSE}
+```{r, warning=FALSE, message=FALSE, eval = FALSE}
 rm(fit1)
 # Previsão
 #Inflação - Produto - Juros - Câmbio - Desigualdade.
@@ -7687,51 +8106,108 @@ fit1 <- readRDS("D:\\Onedrive - Aisha\\OneDrive\\Documentos\\Mestrado Economia\\
 #rm(fit1)
 ```
 
-Vou deixar isso aqui de lado por enquanto
+```{r}
+# Primeiro eu monto um objeto só com a previsão
+# Eu sei que essa coisa tem três dimensões e quero calcular a média da terceira dimensão e ficar com uma matriz
+var24_prev <- apply(fit1$fc.ydraws, c(1,2), mean)
 
-```{r, echo = FALSE, eval = FALSE}
-# Variável para fazer a previsão
-sel.var <- 1 # 1- Razão capital trabalho 2 - ipca 3 - pib 4 - swap 5 - cambio
+# Agora preciso calcular os erros de previsão em cada período
+# nf é o número de períodos de previsão
+# amostra1 é onde ficam guardados os valores que estou prevendo
+# var1_prev é onde ficam guardados os valores que eu previ
 
-# Ajusta um outro var apenas para comparar, estimado por MQO
-fit2.ols <- VAR(var1, p=1)
-fc.ols   <- predict(fit2.ols, n.ahead = nf.)[[1]][[sel.var]] 
-fc.ols.mean <- fc.ols[,1]
-fc.ols.sd <- (fc.ols[,1]-fc.ols[,2])/qnorm(0.975)
+amostra24 <- t(amostra_1)
+erro_prev <- amostra24 - var24_prev
 
-# Calcula os tempos
-time.labels <- paste(seq(as.Date("2017-11-30"), length = nf., by = "-31 days"))
-time.labels <- format(as.Date(rev(time.labels)), "%Y-%m")
+q_t <- abs(erro_prev/apply(var1[((tau.+p.+1):nrow(var1)),], 2, FUN = den_MASE))
 
-# Cacarecos do plot
-xax.lim <- qnorm(c(0.0001, 0.9999), mean = fc.ols.mean[2], sd = fc.ols.sd[2])
-xax <- seq(from = xax.lim[1], to = xax.lim[2], length.out = 500)
-old.par <- par(mfrow = c(nf., 2))
-cols2 <- cbPalette[c(2,4,6)]
+MASE_24 <- apply(q_t, 1, sum)
 
-# Iterando para obter as previsões
-for (hh in c(1,nf.)){
-  # Forecast density
-  f1 <- predictive.density(fit1, h = hh, v = sel.var)
-  # OLS forecast density
-  f2 <- function(z) dnorm(z, mean = fc.ols.mean[hh], sd = fc.ols.sd[hh])
-  
-  # Arruma a escala
-  if (hh==1) y.max <- max(c(f1(xax), f2(xax)))
-  
-  # Calcula a log verossimilhança
-  ls1 <- log(f1(amostra_1[hh]))
-  ls2 <- log(f2(amostra_1[hh]))
-  
-  #plot
-  matplot2(x = xax, y = cbind(f1(xax), f2(xax)), col = cols2, main = time.labels[hh], ylim = c(0, y.max), sub = paste0("Log Lik: ", round(ls1, 3), " (TVP-VAR), ", round(ls2,3), "(Var simples)"), xlab = "")
-  
-  # Adicciona a legenda
-  if (hh==10 |hh==1 ){
-    legend("topright", c("TVP-VAR", "Var Simples"), col = cols2, bty = "n", lwd = 3)
-  }
-  # Marcação do verdadeiro valor
-  abline(v= amostra_1[hh,sel.var])
-}
+MAPE_24 <- vector()
+MSE_24  <- vector()
+
+for (i in 1:ncol(var1)){
+    MAPE_24[i] <- MAPE(x = var24_prev[i,1:nf.], ref = amostra24[i,1:nf.])
+    MSE_24[i] <- MSE(x = var24_prev[i,1:nf.], ref = amostra24[i,1:nf.])
+} 
 
 ```
+
+Agora estimo um modelo VAR(1) simples para comparar
+
+```{r, warning = FALSE, message = FALSE}
+fit_simples <- VAR(var1, p=p.)
+var_simples_prev <- predict(fit_simples, n.ahead = nf.)
+vars_prev <- matrix(NA, ncol = ncol(var1), nrow = nf.)
+
+for (i in 1:ncol(var1)){
+  vars_prev[,i] <-  (var_simples_prev[[1]][[i]][,1])
+}
+
+erro_simples <- amostra_1 - vars_prev
+
+q_t <- abs(erro_simples/apply(var1[((tau.+p.+1):nrow(var1)),], 2, FUN = den_MASE))
+
+MASE_24_simples <- apply(q_t, 2, sum)
+
+MAPE_24_simples <- vector()
+MSE_24_simples  <- vector()
+
+for (i in 1:ncol(var1)){
+   MAPE_24_simples[i] <- MAPE(x = vars_prev[1:nf.,i], ref = amostra_1[1:nf.,i])
+   MSE_24_simples[i] <- MSE(x = vars_prev[1:nf.,i], ref = amostra_1[1:nf.,i])
+} 
+
+```
+
+Agora vamos juntar todo mundo numa tabelinha bonitinha. 
+
+```{r, message = FALSE, warning = FALSE}
+matrizona <- matrix(NA, ncol = ncol(var1), nrow = (2*3*4)) # 3 measures and 4 times 2 methods
+colnames(matrizona) <- c("capital trabalho", "ipca", "pib", "swap", "cambio")
+rownames(matrizona) <- c("MASE TVP-VAR 1", "MASE VAR 1", "MSE TVP-VAR 1", "MSE VAR 1", "MAPE TVP-VAR 1", "MAPE VAR 1", 
+                         "MASE TVP-VAR 6", "MASE VAR 6", "MSE TVP-VAR 6", "MSE VAR 6", "MAPE TVP-VAR 6", "MAPE VAR 6", 
+                         "MASE TVP-VAR 12", "MASE VAR 12", "MSE TVP-VAR 12", "MSE VAR 12", "MAPE TVP-VAR 12", "MAPE VAR 12",
+                         "MASE TVP-VAR 24", "MASE VAR 24", "MSE TVP-VAR 24", "MSE VAR 24", "MAPE TVP-VAR 24", "MAPE VAR 24")
+matrizona[1,] <- as.vector(MASE_1)
+
+# 1 step
+matrizona[1,] <- round(as.vector(MASE_1),4)
+matrizona[2,] <- round(MASE_1_simples, 4)
+matrizona[3,] <- round(MSE_1, 4)
+matrizona[4,] <- round(MSE_1_simples, 4)
+matrizona[5,] <- round(MAPE_1, 4)
+matrizona[6,] <- round(MAPE_1_simples, 4)
+
+# 6 steps
+matrizona[7,] <- round(MASE_6,4)
+matrizona[8,] <- round(MASE_6_simples, 4)
+matrizona[9,] <- round(MSE_6, 4)
+matrizona[10,] <- round(MSE_6_simples, 4)
+matrizona[11,] <- round(MAPE_6, 4)
+matrizona[12,] <- round(MAPE_6_simples, 4)
+
+# 12 steps
+matrizona[13,] <- round(MASE_12,4)
+matrizona[14,] <- round(MASE_12_simples, 4)
+matrizona[15,] <- round(MSE_12, 4)
+matrizona[16,] <- round(MSE_12_simples, 4)
+matrizona[17,] <- round(MAPE_12, 4)
+matrizona[18,] <- round(MAPE_12_simples, 4)
+
+# 24 steps
+matrizona[19,] <- round(MASE_24,4)
+matrizona[20,] <- round(MASE_24_simples, 4)
+matrizona[21,] <- round(MSE_24, 4)
+matrizona[22,] <- round(MSE_24_simples, 4)
+matrizona[23,] <- round(MAPE_24, 4)
+matrizona[24,] <- round(MAPE_24_simples, 4)
+
+matrizona <- data.frame(matrizona)
+
+#stargazer(matrizona, summary=FALSE, header = TRUE, type = 'latex')
+stargazer(matrizona, summary=FALSE, header = TRUE, type = 'html')
+
+```
+
+
